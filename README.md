@@ -3,9 +3,9 @@ Repositório para armazenar os desafios técnicos para a pós graduação em I.A
 
 # Configurações
 
-Nesse repositório foi utilizado o gerenciador de pacotes Python UV (https://docs.astral.sh/uv/).
+Nesse repositório foi utilizado o gerenciador de pacotes [Python UV](https://docs.astral.sh/uv/).
 
-Para reproduzir o ambiente, basta instalar o `uv` e digitar `uv sync`.
+Para reproduzir o ambiente, basta instalar o `uv` e digitar `uv init`.
 
 # Desafios
 
@@ -13,7 +13,7 @@ AO final de cada uma das fases foi desenvolvido um desafio técnico (tech challe
 
 ## Fase 01
 
-Os arquivos estão na pasta `fase-01`.
+Os arquivos estão na pasta [fase-01](fase-01).
 
 Neste desafio foi desenvolvido um modelo preditivo de regressão para prever o valor dos custos médicos individuais cobrados por um seguro de saúde fictício.
  
