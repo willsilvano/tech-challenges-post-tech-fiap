@@ -1,7 +1,5 @@
 # TECH CHALLENGE - Fase 01
 
-Tech Challenge é o projeto que engloba os conhecimentos obtidos em todas as disciplinas dessa fase. 
-
 Esta é uma atividade que, em princípio, deve ser desenvolvida em grupo. 
 
 ## Especificações
@@ -73,5 +71,3 @@ Como entregável, o grupo deve enviar um vídeo junto com o link do github do pr
 O vídeo deve estar em uma plataforma como Youtube. 
 
 Qualquer dúvida, não deixe de nos chamar no Discord: lá poderemos tirar suas dúvidas e auxiliar nesta tarefa. 
-
-Boa sorte!
