@@ -32,9 +32,6 @@ def calculate(age, sex, bmi, children, smoker, region):
     df = pd.DataFrame(data)
     df2 = transform_categorical_to_numeric(df)
 
-    st.write("Dataframe:")
-    st.dataframe(df, width=900)
-
     with open('fase-01/dados/pipeline_model.pkl', 'rb') as file:
         model = pickle.load(file)
 
@@ -77,9 +74,6 @@ with col6:
         ('southwest', 'southeast', 'northwest', 'northeast')
     )
 
-calculate_button = st.button('Calculate')
+calculate_result = calculate(age, sex, bmi, children, smoker, region)
 
-if calculate_button:
-    calculate_result = calculate(age, sex, bmi, children, smoker, region)
-
-    st.subheader(f'The charges value are: ${calculate_result[0]:.2f}')
+st.subheader(f'The charges value are: ${calculate_result[0]:.2f}')
