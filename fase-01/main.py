@@ -40,10 +40,10 @@ def calculate(age, sex, bmi, children, smoker, region):
     return charges
 
 
-st.title('Tech Challenge Post Tech Fiap')
-st.write("### Insurance Charges Prediction")
+st.title('Tech Challenge - Pós Tech Fiap')
+st.write("### Health Insurance Cost Prediction")
 
-st.write("Enter the following data:")
+st.write("Enter the details below to estimate the insurance cost:")
 
 col1, col2, col3, col4, col5, col6 = st.columns([5, 8, 5, 5, 5, 8])
 
@@ -76,4 +76,4 @@ with col6:
 
 calculate_result = calculate(age, sex, bmi, children, smoker, region)
 
-st.subheader(f'The charges value are: ${calculate_result[0]:.2f}')
+st.subheader(f'Estimated Insurance Cost: ${calculate_result[0]:.2f}')
