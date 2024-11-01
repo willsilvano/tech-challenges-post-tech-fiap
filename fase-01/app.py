@@ -2,6 +2,7 @@ import pickle
 
 import pandas as pd
 import streamlit as st
+import os
 
 
 def transform_categorical_to_numeric(df):
@@ -21,6 +22,18 @@ def transform_categorical_to_numeric(df):
 
 
 def calculate(age, sex, bmi, children, smoker, region):
+    sex = 'male' if sex == 'Masculino' else 'female'
+    smoker = 'yes' if smoker == 'Sim' else 'no'
+
+    if region == 'Nordeste':
+        region = 'northeast'
+    elif region == 'Noroeste':
+        region = 'northwest'
+    elif region == 'Sudeste':
+        region = 'southeast'
+    elif region == 'Sudoeste':
+        region = 'southwest'
+
     data = {
         'age': [age],
         'sex': [sex],
@@ -29,10 +42,13 @@ def calculate(age, sex, bmi, children, smoker, region):
         'smoker': [smoker],
         'region': [region]
     }
+    print(data)
+
     df = pd.DataFrame(data)
     df2 = transform_categorical_to_numeric(df)
 
-    with open('fase-01/dados/pipeline_model.pkl', 'rb') as file:
+    pickel_file = os.path.join('dados/pipeline_model.pkl')
+    with open(pickel_file, 'rb') as file:
         model = pickle.load(file)
 
     charges = model.predict(df2)
@@ -40,40 +56,40 @@ def calculate(age, sex, bmi, children, smoker, region):
     return charges
 
 
-st.title('Tech Challenge - Pós Tech Fiap')
-st.write("### Health Insurance Cost Prediction")
+st.title('Tech Challenge - Pós Tech FIAP')
+st.write("### Predicão do Custo Médico do Plano de Saúde")
 
-st.write("Enter the details below to estimate the insurance cost:")
+st.write("Preencha os detalhes abaixo para estimar o custo do seguro:")
 
 col1, col2, col3, col4, col5, col6 = st.columns([5, 8, 5, 5, 5, 8])
 
 with col1:
-    age = st.number_input('Age', step=1, min_value=18, max_value=100)
+    age = st.number_input('Idade', step=1, min_value=18, max_value=100)
 
 with col2:
     sex = st.selectbox(
-        'Sex',
-        ('male', 'female')
+        'Sexo',
+        ('Masculino', 'Feminino')
     )
 
 with col3:
-    bmi = st.number_input('BMI', step=0.1, min_value=0.0, max_value=100.0)
+    bmi = st.number_input('IMC', step=0.1, min_value=0.0, max_value=100.0)
 
 with col4:
-    children = st.number_input('Children', step=1, min_value=0, max_value=20)
+    children = st.number_input('Nº Filhos', step=1, min_value=0, max_value=20)
 
 with col5:
     smoker = st.selectbox(
-        'Smoker',
-        ('yes', 'no')
+        'Fumante',
+        ('Sim', 'Não')
     )
 
 with col6:
     region = st.selectbox(
-        'Region',
-        ('southwest', 'southeast', 'northwest', 'northeast')
+        'Região',
+        ('Sudoeste', 'Sudeste', 'Noroeste', 'Nordeste')
     )
 
 calculate_result = calculate(age, sex, bmi, children, smoker, region)
 
-st.subheader(f'Estimated Insurance Cost: ${calculate_result[0]:.2f}')
+st.subheader(f'Custo Estimado: ${calculate_result[0]:.2f}')
