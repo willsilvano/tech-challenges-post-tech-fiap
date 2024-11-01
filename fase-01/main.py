@@ -35,7 +35,7 @@ def calculate(age, sex, bmi, children, smoker, region):
     st.write("Dataframe:")
     st.dataframe(df, width=900)
 
-    with open('fase-01/dados/model.pkl', 'rb') as file:
+    with open('fase-01/dados/pipeline_model.pkl', 'rb') as file:
         model = pickle.load(file)
 
     charges = model.predict(df2)
