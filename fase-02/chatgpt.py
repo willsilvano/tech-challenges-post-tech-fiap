@@ -1,8 +1,10 @@
+import datetime
+import random
+
+import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-import random
-import datetime
-import pandas as pd
+
 
 ##############################################################################
 # 1. FUNÇÕES DE DATA
@@ -16,6 +18,7 @@ def date_to_int(date_str, ref_date):
     d = datetime.date(ano, mes, dia)
     delta = d - ref_date
     return delta.days
+
 
 def int_to_date(days, ref_date):
     """
@@ -313,6 +316,7 @@ def gerar_dados():
 
     return colaboradores, projetos
 
+
 def montar_tarefas_globais(colaboradores, projetos):
     tarefas_globais = []
     for proj in projetos:
@@ -329,6 +333,7 @@ def montar_tarefas_globais(colaboradores, projetos):
             })
     return tarefas_globais, colaboradores
 
+
 ##############################################################################
 # 3. FUNÇÕES DO GA
 ##############################################################################
@@ -336,167 +341,135 @@ def montar_tarefas_globais(colaboradores, projetos):
 def criar_individuo(num_tarefas, lista_colab_ids):
     return [random.choice(lista_colab_ids) for _ in range(num_tarefas)]
 
+
 def populacao_inicial(tam_pop, num_tarefas, lista_colab_ids):
     return [criar_individuo(num_tarefas, lista_colab_ids) for _ in range(tam_pop)]
 
-# def avaliar(individuo, tarefas_globais, colaboradores):
-#     alocacoes = {c["id"]: [] for c in colaboradores}
-#     penalidade = 0
-#     makespan = 0
-#
-#     inicio_projeto = {t["projeto"]: 0 for t in tarefas_globais}
-#     fim_projeto = {t["projeto"]: 0 for t in tarefas_globais}
-#
-#     # print(fim_projeto)
-#
-#     # Criar mapeamento de tarefas por projeto para checagem de sequência
-#     tarefas_por_projeto = {}
-#     for t in tarefas_globais:
-#         if t["projeto"] not in tarefas_por_projeto:
-#             tarefas_por_projeto[t["projeto"]] = []
-#         tarefas_por_projeto[t["projeto"]].append(t)
-#
-#     for projeto, tarefas in tarefas_por_projeto.items():
-#         tarefas_por_projeto[projeto] = sorted(tarefas, key=lambda x: x["task_id"])
-#
-#     # Iterar sobre as tarefas no cromossomo
-#     for i, t in enumerate(tarefas_globais):
-#         cid = individuo[i]
-#         colab = next(x for x in colaboradores if x["id"] == cid)
-#
-#         # Habilidade e cargo
-#         if not t["habilidades_necessarias"].issubset(colab["habilidades"]):
-#             penalidade += 10_000
-#         if t["cargo_necessario"] != colab["cargo"]:
-#             penalidade += 10_000
-#
-#         # Calcula o início da tarefa
-#         # print(fim_projeto[t["projeto"]])
-#         inicio_tarefa = max(fim_projeto[t["projeto"]], max([a[1] for a in alocacoes[cid]] or [0]))
-#         fim_tarefa = inicio_tarefa + t["duracao_dias"]
-#
-#         # Verifica ausências
-#         for d in range(inicio_tarefa, fim_tarefa):
-#             if d in colab["ausencias"]:
-#                 penalidade += 500
-#                 break
-#
-#         # print(tarefas_por_projeto)
-#         # raise Exception("stop")
-#
-#         # Penalizar se a ordem das tarefas do projeto não estiver correta
-#         posicao_tarefa = tarefas_por_projeto[t["projeto"]].index(t)
-#         if posicao_tarefa > 0:
-#             # print(fim_projeto[t["projeto"]])
-#             tarefa_anterior = tarefas_por_projeto[t["projeto"]][posicao_tarefa - 1]
-#             if fim_projeto[t["projeto"]] < fim_projeto.get(tarefa_anterior["task_id"], 0):
-#                 # print(posicao_tarefa)
-#                 penalidade += 5_000
-#
-#         # Atualiza intervalos
-#         alocacoes[cid].append((inicio_tarefa, fim_tarefa))
-#         fim_projeto[t["projeto"]] = fim_tarefa
-#
-#         if fim_tarefa > makespan:
-#             makespan = fim_tarefa
-#
-#     # Sobreposições
-#     for cid, intervals in alocacoes.items():
-#         for i1 in range(len(intervals)):
-#             for i2 in range(i1+1, len(intervals)):
-#                 s1, e1 = intervals[i1]
-#                 s2, e2 = intervals[i2]
-#                 if not (e1 <= s2 or e2 <= s1):
-#                     penalidade += 2000
-#
-#     return makespan + penalidade
 
 def avaliar(individuo, tarefas_globais, colaboradores):
     """
-    Avalia um indivíduo da população considerando:
-    - Habilidades e cargo dos colaboradores.
-    - Ausências dos colaboradores.
-    - Ordem correta das etapas dos projetos.
-    - Conflitos de sobreposição para o mesmo colaborador.
-    - Conflitos de sobreposição de atividades do mesmo projeto.
+    Avalia um indivíduo e retorna:
+    - Fitness (int)
+    - Detalhamento das penalidades (dict)
     """
+
+    # Para cada colaborador, guardaremos uma lista de intervalos [(start, end), ...]
     alocacoes = {c["id"]: [] for c in colaboradores}
-    penalidade = 0
-    makespan = 0
 
-    # Controle de término por projeto
-    fim_projeto = {t["projeto"]: 0 for t in tarefas_globais}
+    # Para cada projeto, guardaremos os intervalos também, para checar sobreposição no mesmo projeto
+    intervalos_projetos = {}
 
-    # Mapeamento de tarefas por projeto para validar sequência
+    # Dicionário que guarda o 'último fim' de cada projeto
+    fim_projeto = {}
+
+    # Inicializar com zero
+    for t in tarefas_globais:
+        fim_projeto[t["projeto"]] = 0
+        intervalos_projetos[t["projeto"]] = []
+
+    # Dicionário de penalidades para entender onde o fitness foi penalizado
+    penalidades = {
+        "habilidades_incorretas": 0,
+        "cargo_incorreto": 0,
+        "ausencias": 0,
+        "sobreposicoes_colaborador": 0,
+        "sobreposicoes_projeto": 0,
+        "ordem_incorreta": 0,  # Se você quiser penalizar ordens fora de sequência, pode usar.
+    }
+
+    # makespan = 0
+
+    # Mapeamento de tarefas por projeto para garantir a ordem
     tarefas_por_projeto = {}
     for t in tarefas_globais:
         if t["projeto"] not in tarefas_por_projeto:
             tarefas_por_projeto[t["projeto"]] = []
         tarefas_por_projeto[t["projeto"]].append(t)
 
-    # Ordenar tarefas de cada projeto por `task_id`
+    # Ordenar tarefas de cada projeto por task_id (garante sequência lógica)
     for projeto in tarefas_por_projeto:
-        tarefas_por_projeto[projeto] = sorted(tarefas_por_projeto[projeto], key=lambda x: x["task_id"])
-
-    # Intervalos por projeto para verificar sobreposições
-    intervalos_projetos = {projeto: [] for projeto in tarefas_por_projeto}
+        tarefas_por_projeto[projeto] = sorted(
+            tarefas_por_projeto[projeto], key=lambda x: x["task_id"]
+        )
 
     # Avaliação das tarefas no cromossomo
     for i, t in enumerate(tarefas_globais):
         cid = individuo[i]
         colab = next(x for x in colaboradores if x["id"] == cid)
 
-        # Verificar habilidades e cargo
+        # 1) Penalizar se colaborador não tem as habilidades
         if not t["habilidades_necessarias"].issubset(colab["habilidades"]):
-            penalidade += 10_000
-        if t["cargo_necessario"] != colab["cargo"]:
-            penalidade += 10_000
+            penalidades["habilidades_incorretas"] += 10_000
 
-        # Calcular início e fim da tarefa baseado na sequência do projeto
-        posicao_tarefa = tarefas_por_projeto[t["projeto"]].index(t)
-        if posicao_tarefa > 0:
-            tarefa_anterior = tarefas_por_projeto[t["projeto"]][posicao_tarefa - 1]
-            inicio_tarefa = max(fim_projeto[t["projeto"]], fim_projeto[tarefa_anterior["projeto"]])
+        # 2) Penalizar se colaborador não tem o cargo exigido
+        if t["cargo_necessario"] != colab["cargo"]:
+            penalidades["cargo_incorreto"] += 10_000
+
+        # 3) Calcular início da tarefa
+        #    - Deve respeitar o término da etapa anterior do mesmo projeto.
+        #    - Deve respeitar quando o colaborador estiver livre.
+
+        # Qual foi o último fim do PROJETO até agora?
+        ultimo_fim_proj = fim_projeto[t["projeto"]]
+
+        # Qual foi o último fim do COLABORADOR?
+        if alocacoes[cid]:
+            ultimo_fim_colab = max(e for (s, e) in alocacoes[cid])
         else:
-            inicio_tarefa = fim_projeto[t["projeto"]]
+            ultimo_fim_colab = 0
+
+        # A tarefa não pode começar antes do projeto e nem antes do colab estar livre
+        inicio_tarefa = max(ultimo_fim_proj, ultimo_fim_colab)
         fim_tarefa = inicio_tarefa + t["duracao_dias"]
 
-        # Verificar ausências do colaborador
-        for d in range(inicio_tarefa, fim_tarefa):
-            if d in colab["ausencias"]:
-                penalidade += 500
+        # 4) Verificar ausências desse colaborador (por simplicidade, assumindo dias inteiros)
+        for dia in range(inicio_tarefa, fim_tarefa):
+            if dia in colab["ausencias"]:
+                penalidades["ausencias"] += 500
                 break
 
-        # Atualizar intervalos de alocação e término do projeto
+        # 5) Atualizar fim do projeto e intervalos
+        fim_projeto[t["projeto"]] = fim_tarefa
         alocacoes[cid].append((inicio_tarefa, fim_tarefa))
         intervalos_projetos[t["projeto"]].append((inicio_tarefa, fim_tarefa))
-        fim_projeto[t["projeto"]] = fim_tarefa
 
-        # Atualizar makespan
-        makespan = max(makespan, fim_tarefa)
+        # 6) Atualizar makespan (tempo total)
+        # makespan = max(makespan, fim_tarefa)
 
-    # Verificar sobreposições para o mesmo colaborador
+    # ------------------------------------------------------------------
+    # 7) Verificar sobreposições para o mesmo colaborador
+    #    (Se quiser permitir que termine no dia X e outra comece no dia X sem penalidade,
+    #    use 'e1 <= s2 ou e2 <= s1')
+    # ------------------------------------------------------------------
     for cid, intervals in alocacoes.items():
         for i1 in range(len(intervals)):
             for i2 in range(i1 + 1, len(intervals)):
                 s1, e1 = intervals[i1]
                 s2, e2 = intervals[i2]
-                if not (e1 <= s2 or e2 <= s1):  # Conflito de sobreposição
-                    penalidade += 2000
+                # Se NÃO for verdade que (e1 <= s2 ou e2 <= s1), então é sobreposição
+                if not (e1 <= s2 or e2 <= s1):
+                    penalidades["sobreposicoes_colaborador"] += 2000
 
-    # Verificar sobreposições de atividades do mesmo projeto
+    # ------------------------------------------------------------------
+    # 8) Verificar sobreposições dentro do mesmo projeto
+    # ------------------------------------------------------------------
     for projeto, intervals in intervalos_projetos.items():
         for i1 in range(len(intervals)):
             for i2 in range(i1 + 1, len(intervals)):
                 s1, e1 = intervals[i1]
                 s2, e2 = intervals[i2]
-                if not (e1 <= s2 or e2 <= s1):  # Conflito de sobreposição
-                    penalidade += 5000
+                if not (e1 <= s2 or e2 <= s1):
+                    penalidades["sobreposicoes_projeto"] += 5000
 
-    return makespan + penalidade
+    # 9) Se você quiser checar "ordem_incorreta", poderia, por exemplo,
+    #    verificar se a tarefa i (task_id) sempre começa depois da (i-1),
+    #    mas a maior parte disso já está coberta por fim_projeto.
+    #    Fica como opcional:
+    # penalidades["ordem_incorreta"] += ...
 
-
-
+    # 10) Soma das penalidades + makespan
+    fitness = sum(penalidades.values())
+    return fitness, penalidades
 
 
 def torneio(populacao, fitnesses, k=3):
@@ -509,6 +482,7 @@ def torneio(populacao, fitnesses, k=3):
             best_idx = idx
     return best_idx
 
+
 def crossover(ind1, ind2):
     size = len(ind1)
     if size < 2:
@@ -518,11 +492,13 @@ def crossover(ind1, ind2):
     f2 = ind2[:cx] + ind1[cx:]
     return f1, f2
 
+
 def mutacao(individuo, lista_colab_ids, taxa_mut=0.1):
     for i in range(len(individuo)):
         if random.random() < taxa_mut:
             individuo[i] = random.choice(lista_colab_ids)
     return individuo
+
 
 def algoritmo_genetico(tam_pop, n_gen, pc, pm, tarefas_globais, colaboradores):
     """
@@ -530,57 +506,76 @@ def algoritmo_genetico(tam_pop, n_gen, pc, pm, tarefas_globais, colaboradores):
       best_sol (lista de IDs)
       best_fit (float com o fitness)
       historico_fitness (lista com o melhor fitness a cada geração)
+      detalhes_penalidades (dict com penalidades acumuladas do melhor indivíduo)
     """
     num_t = len(tarefas_globais)
     colab_ids = [c["id"] for c in colaboradores]
     pop = populacao_inicial(tam_pop, num_t, colab_ids)
-    fits = [avaliar(ind, tarefas_globais, colaboradores) for ind in pop]
+
+    # Avaliação inicial
+    fits_and_penalties = [avaliar(ind, tarefas_globais, colaboradores) for ind in pop]
+    fits = [fit for fit, _ in fits_and_penalties]
+    penalties = [penalty for _, penalty in fits_and_penalties]
 
     best_sol = None
     best_fit = float("inf")
+    best_penalty = {}
     historico_fitness = []
 
     for gen in range(n_gen):
         new_pop = []
         new_fits = []
+        new_penalties = []
 
-        # elitismo simples
+        # Elitismo simples
         for i, f in enumerate(fits):
             if f < best_fit:
                 best_fit = f
                 best_sol = pop[i][:]
+                best_penalty = penalties[i]
 
-        # Salva o melhor da geração atual
+        # Salva o melhor fitness da geração atual
         historico_fitness.append(best_fit)
 
         while len(new_pop) < tam_pop:
             p1 = pop[torneio(pop, fits)]
             p2 = pop[torneio(pop, fits)]
+
             if random.random() < pc:
                 c1, c2 = crossover(p1, p2)
             else:
                 c1, c2 = p1[:], p2[:]
+
             if random.random() < pm:
                 c1 = mutacao(c1, colab_ids, 0.1)
             if random.random() < pm:
                 c2 = mutacao(c2, colab_ids, 0.1)
+
             new_pop.append(c1)
             if len(new_pop) < tam_pop:
                 new_pop.append(c2)
 
-        pop = new_pop
-        fits = [avaliar(ind, tarefas_globais, colaboradores) for ind in pop]
+        # Avaliação da nova população
+        fits_and_penalties = [avaliar(ind, tarefas_globais, colaboradores) for ind in new_pop]
+        new_fits = [fit for fit, _ in fits_and_penalties]
+        new_penalties = [penalty for _, penalty in fits_and_penalties]
 
-    # ultima checagem
+        pop = new_pop
+        fits = new_fits
+        penalties = new_penalties
+
+    # Última checagem após todas as gerações
     for i, f in enumerate(fits):
         if f < best_fit:
             best_fit = f
             best_sol = pop[i][:]
+            best_penalty = penalties[i]
 
-    # Adiciona fitness final
+    # Adiciona fitness final ao histórico
     historico_fitness.append(best_fit)
 
-    return best_sol, best_fit, historico_fitness
+    return best_sol, best_fit, historico_fitness, best_penalty
+
 
 ##############################################################################
 # 4. FULLCALENDAR
@@ -597,6 +592,7 @@ PROJECT_COLORS = {
     "Projeto Iota": "#20B2AA",  # Azul-esverdeado
     "Projeto Kappa": "#808080",  # Cinza
 }
+
 
 def gerar_fullcalendar_html(eventos, initial_date):
     import json
@@ -682,6 +678,7 @@ def gerar_fullcalendar_html(eventos, initial_date):
     """
     return html_code
 
+
 ##############################################################################
 # 5. STREAMLIT APP
 ##############################################################################
@@ -752,8 +749,6 @@ def verificar_conflitos(df_result):
     return df_conflitos
 
 
-
-
 def main():
     st.title("Algoritmo Genético para Alocação de Colaboradores")
 
@@ -773,7 +768,7 @@ def main():
         colaboradores, projetos = gerar_dados()
         tarefas_globais, colaboradores = montar_tarefas_globais(colaboradores, projetos)
 
-        best_ind, best_val, hist_fit = algoritmo_genetico(
+        best_ind, best_val, hist_fit, detalhes_penalidades = algoritmo_genetico(
             tam_pop, n_gen, pc, pm, tarefas_globais, colaboradores
         )
 
@@ -815,6 +810,7 @@ def main():
         st.session_state["df_result"] = df_res
         st.session_state["melhor_fit"] = best_val
         st.session_state["hist_fit"] = hist_fit
+        st.session_state["detalhes_penalidades"] = detalhes_penalidades
 
     tab_result, tab_calendar = st.tabs(["Resultados do Algoritmo", "Calendário & Filtros"])
 
@@ -834,7 +830,7 @@ def main():
             })
             st.line_chart(df_fit, x="Geração", y="Fitness")
 
-        if "melhor_fit" in  st.session_state:
+        if "melhor_fit" in st.session_state:
             st.write('Melhor Fitness: ')
             st.write(st.session_state["melhor_fit"])
 
@@ -848,7 +844,7 @@ def main():
                 st.warning("Há conflitos de alocação! Veja abaixo:")
                 st.table(df_conf)
 
-    # with tab_calendar:
+        # with tab_calendar:
         df_result = st.session_state["df_result"]
         if df_result is None:
             st.info("Rode o Algoritmo.")
@@ -891,6 +887,11 @@ def main():
 
                 cal_html = gerar_fullcalendar_html(eventos, datetime.date.today().strftime("%Y-%m-%d"))
                 components.html(cal_html, height=700, scrolling=True)
+
+        st.subheader("Detalhamento das Penalidades")
+        for motivo, valor in st.session_state["detalhes_penalidades"].items():
+            st.write(f"**{motivo.replace('_', ' ').capitalize()}:** {valor}")
+    # with tab_detalhes:
 
 
 if __name__ == "__main__":
