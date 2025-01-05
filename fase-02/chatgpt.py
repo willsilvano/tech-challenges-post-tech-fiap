@@ -314,16 +314,13 @@ def gerar_dados():
     return colaboradores, projetos
 
 def montar_tarefas_globais(colaboradores, projetos):
-    """
-    Cria lista de tarefas globais a partir dos projetos.
-    A ordenação e espaçamento entre tarefas serão ajustados no algoritmo genético.
-    """
     tarefas_globais = []
     for proj in projetos:
-        proj_nome = proj["nome"]
-        for etapa in proj["etapas"]:
+        # Ordena as etapas do projeto por id
+        etapas_ordenadas = sorted(proj["etapas"], key=lambda e: e["id"])
+        for etapa in etapas_ordenadas:
             tarefas_globais.append({
-                "projeto": proj_nome,
+                "projeto": proj["nome"],
                 "task_id": etapa["id"],
                 "nome": etapa["nome"],
                 "duracao_dias": etapa["duracao_dias"],
@@ -427,8 +424,7 @@ def avaliar(individuo, tarefas_globais, colaboradores):
     penalidade = 0
     makespan = 0
 
-    # Controle de início e fim por projeto
-    inicio_projeto = {t["projeto"]: 0 for t in tarefas_globais}
+    # Controle de término por projeto
     fim_projeto = {t["projeto"]: 0 for t in tarefas_globais}
 
     # Mapeamento de tarefas por projeto para validar sequência
@@ -438,9 +434,12 @@ def avaliar(individuo, tarefas_globais, colaboradores):
             tarefas_por_projeto[t["projeto"]] = []
         tarefas_por_projeto[t["projeto"]].append(t)
 
-    # Ordenar tarefas de cada projeto por `task_id` (ordem correta das etapas)
+    # Ordenar tarefas de cada projeto por `task_id`
     for projeto in tarefas_por_projeto:
         tarefas_por_projeto[projeto] = sorted(tarefas_por_projeto[projeto], key=lambda x: x["task_id"])
+
+    # Intervalos por projeto para verificar sobreposições
+    intervalos_projetos = {projeto: [] for projeto in tarefas_por_projeto}
 
     # Avaliação das tarefas no cromossomo
     for i, t in enumerate(tarefas_globais):
@@ -453,8 +452,13 @@ def avaliar(individuo, tarefas_globais, colaboradores):
         if t["cargo_necessario"] != colab["cargo"]:
             penalidade += 10_000
 
-        # Calcular início e fim da tarefa
-        inicio_tarefa = max(fim_projeto[t["projeto"]], max([a[1] for a in alocacoes[cid]] or [0]))
+        # Calcular início e fim da tarefa baseado na sequência do projeto
+        posicao_tarefa = tarefas_por_projeto[t["projeto"]].index(t)
+        if posicao_tarefa > 0:
+            tarefa_anterior = tarefas_por_projeto[t["projeto"]][posicao_tarefa - 1]
+            inicio_tarefa = max(fim_projeto[t["projeto"]], fim_projeto[tarefa_anterior["projeto"]])
+        else:
+            inicio_tarefa = fim_projeto[t["projeto"]]
         fim_tarefa = inicio_tarefa + t["duracao_dias"]
 
         # Verificar ausências do colaborador
@@ -463,20 +467,13 @@ def avaliar(individuo, tarefas_globais, colaboradores):
                 penalidade += 500
                 break
 
-        # Verificar ordem correta das etapas dentro do mesmo projeto
-        posicao_tarefa = tarefas_por_projeto[t["projeto"]].index(t)
-        if posicao_tarefa > 0:
-            tarefa_anterior = tarefas_por_projeto[t["projeto"]][posicao_tarefa - 1]
-            if inicio_tarefa < fim_projeto.get(tarefa_anterior["task_id"], 0):
-                penalidade += 5_000
-
-        # Atualizar intervalos de alocação e fim do projeto
+        # Atualizar intervalos de alocação e término do projeto
         alocacoes[cid].append((inicio_tarefa, fim_tarefa))
+        intervalos_projetos[t["projeto"]].append((inicio_tarefa, fim_tarefa))
         fim_projeto[t["projeto"]] = fim_tarefa
 
         # Atualizar makespan
-        if fim_tarefa > makespan:
-            makespan = fim_tarefa
+        makespan = max(makespan, fim_tarefa)
 
     # Verificar sobreposições para o mesmo colaborador
     for cid, intervals in alocacoes.items():
@@ -488,17 +485,7 @@ def avaliar(individuo, tarefas_globais, colaboradores):
                     penalidade += 2000
 
     # Verificar sobreposições de atividades do mesmo projeto
-    for projeto, tarefas in tarefas_por_projeto.items():
-        intervals = []
-        for t in tarefas:
-            idx = tarefas_globais.index(t)
-            cid = individuo[idx]
-            colab = next(x for x in colaboradores if x["id"] == cid)
-            inicio_tarefa = max(fim_projeto[t["projeto"]], max([a[1] for a in alocacoes[cid]] or [0]))
-            fim_tarefa = inicio_tarefa + t["duracao_dias"]
-            intervals.append((inicio_tarefa, fim_tarefa))
-
-        # Verificar conflitos entre intervalos do mesmo projeto
+    for projeto, intervals in intervalos_projetos.items():
         for i1 in range(len(intervals)):
             for i2 in range(i1 + 1, len(intervals)):
                 s1, e1 = intervals[i1]
@@ -507,6 +494,8 @@ def avaliar(individuo, tarefas_globais, colaboradores):
                     penalidade += 5000
 
     return makespan + penalidade
+
+
 
 
 
@@ -603,7 +592,7 @@ PROJECT_COLORS = {
     "Projeto Gama": "#3355FF",  # Azul
     "Projeto Delta": "#FF33F7",  # Rosa
     "Projeto Epsilon": "#FFD700",  # Dourado
-    "Projeto Zeta": "#FF4500",  # Laranja-avermelhado
+    "Projeto Zeta": "#FF00FF",  # Laranja-avermelhado
     "Projeto Theta": "#7B68EE",  # Roxo
     "Projeto Iota": "#20B2AA",  # Azul-esverdeado
     "Projeto Kappa": "#808080",  # Cinza
@@ -789,13 +778,28 @@ def main():
         )
 
         # Montar df_result
+        project_end = {}  # armazena o último "dia" em que cada projeto terminou
+
         rows = []
         for i, tsk in enumerate(tarefas_globais):
             cid = best_ind[i]
             colab = next(c for c in colaboradores if c["id"] == cid)
             duracao = tsk["duracao_dias"]
-            start = max([row["Fim (dias)"] for row in rows if row["Colaborador"] == colab["nome"]] or [0])
+
+            # Pega o último dia ocupado pelo mesmo colaborador:
+            fim_colab = max([r["Fim (dias)"] for r in rows if r["Colaborador"] == colab["nome"]] or [0])
+
+            # Pega o último dia ocupado pelo mesmo projeto:
+            fim_proj = project_end.get(tsk["projeto"], 0)
+
+            # Agora sim, o início deve ser depois que o colaborador está livre
+            # E também depois que a etapa anterior do mesmo projeto acabou:
+            start = max(fim_colab, fim_proj)
+
             end = start + duracao
+
+            # Atualiza o dicionário de controle do projeto
+            project_end[tsk["projeto"]] = end
 
             rows.append({
                 "Projeto": tsk["projeto"],
