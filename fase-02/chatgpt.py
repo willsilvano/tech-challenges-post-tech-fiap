@@ -5,6 +5,8 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
+import json
+
 
 ##############################################################################
 # 1. FUNÇÕES DE DATA
@@ -28,6 +30,12 @@ def int_to_date(days, ref_date):
     return target_date.strftime("%Y-%m-%d")
 
 
+def read_json_from_file(file_path):
+    with open(file_path, "r") as f:
+        data = json.load(f)
+    return data
+
+
 ##############################################################################
 # 2. GERAÇÃO DE DADOS (MAIS COLABORADORES E PROJETOS)
 ##############################################################################
@@ -38,281 +46,9 @@ def gerar_dados():
       - colaboradores (lista de dicionários)
       - projetos (lista de dicionários, cada um com etapas)
     """
-    colaboradores = [
-        {
-            "id": 101,
-            "nome": "Willian",
-            "habilidades": ["python", "sql"],
-            "cargo": "desenvolvedor backend",
-            "ausencias": ["2024-01-05", "2024-02-01"]
-        },
-        {
-            "id": 102,
-            "nome": "Marco",
-            "habilidades": ["analysis", "qa", "audit"],
-            "cargo": "QA",
-            "ausencias": ["2024-01-15", "2024-01-16"]
-        },
-        {
-            "id": 103,
-            "nome": "Rafaela",
-            "habilidades": ["analysis", "python"],
-            "cargo": "analista",
-            "ausencias": []
-        },
-        {
-            "id": 104,
-            "nome": "Luiz",
-            "habilidades": ["postgresql", "sql"],
-            "cargo": "DBA",
-            "ausencias": ["2024-01-10", "2024-01-11"]
-        },
-        {
-            "id": 105,
-            "nome": "Juliana",
-            "habilidades": ["qa", "audit", "analysis"],
-            "cargo": "QA",
-            "ausencias": ["2024-01-20"]
-        },
-        {
-            "id": 106,
-            "nome": "Paulo",
-            "habilidades": ["python", "sql", "analysis"],
-            "cargo": "desenvolvedor backend",
-            "ausencias": ["2024-01-25", "2024-01-26"]
-        },
-        {
-            "id": 107,
-            "nome": "Fernanda",
-            "habilidades": ["analysis", "python", "audit"],
-            "cargo": "analista",
-            "ausencias": ["2024-02-02"]
-        },
-        {
-            "id": 108,
-            "nome": "Carla",
-            "habilidades": ["qa", "audit"],
-            "cargo": "QA",
-            "ausencias": ["2024-01-29", "2024-02-05"]
-        },
-        {
-            "id": 109,
-            "nome": "Sérgio",
-            "habilidades": ["postgresql", "sql"],
-            "cargo": "DBA",
-            "ausencias": []
-        },
-    ]
+    colaboradores = read_json_from_file("colaboradores.json")
 
-    projetos = [
-
-        {
-            "nome": "Projeto Alpha",
-            "etapas": [
-                {
-                    "id": 1,
-                    "nome": "Análise",
-                    "duracao_dias": 10,
-                    "habilidades_necessarias": ["analysis"],
-                    "cargo_necessario": "analista"
-                },
-                {
-                    "id": 2,
-                    "nome": "Desenvolvimento",
-                    "duracao_dias": 15,
-                    "habilidades_necessarias": ["python"],
-                    "cargo_necessario": "desenvolvedor backend"
-                },
-                {
-                    "id": 3,
-                    "nome": "Revisão SQL",
-                    "duracao_dias": 5,
-                    "habilidades_necessarias": ["sql"],
-                    "cargo_necessario": "desenvolvedor backend"
-                },
-            ]
-        },
-        {
-            "nome": "Projeto Beta",
-            "etapas": [
-                {
-                    "id": 1,
-                    "nome": "Análise Beta",
-                    "duracao_dias": 5,
-                    "habilidades_necessarias": ["analysis"],
-                    "cargo_necessario": "analista"
-                },
-                {
-                    "id": 2,
-                    "nome": "QA Beta",
-                    "duracao_dias": 10,
-                    "habilidades_necessarias": ["qa"],
-                    "cargo_necessario": "QA"
-                },
-                {
-                    "id": 3,
-                    "nome": "Ajustes no Banco",
-                    "duracao_dias": 8,
-                    "habilidades_necessarias": ["sql", "postgresql"],
-                    "cargo_necessario": "DBA"
-                }
-            ]
-        },
-        {
-            "nome": "Projeto Gama",
-            "etapas": [
-                {
-                    "id": 1,
-                    "nome": "Modelagem Gama",
-                    "duracao_dias": 7,
-                    "habilidades_necessarias": ["sql"],
-                    "cargo_necessario": "DBA"
-                },
-                {
-                    "id": 2,
-                    "nome": "Auditoria Gama",
-                    "duracao_dias": 5,
-                    "habilidades_necessarias": ["audit"],
-                    "cargo_necessario": "QA"
-                }
-            ]
-        },
-        {
-            "nome": "Projeto Delta",
-            "etapas": [
-                {
-                    "id": 1,
-                    "nome": "Análise Delta",
-                    "duracao_dias": 8,
-                    "habilidades_necessarias": ["analysis"],
-                    "cargo_necessario": "analista"
-                },
-                {
-                    "id": 2,
-                    "nome": "Dev Delta",
-                    "duracao_dias": 10,
-                    "habilidades_necessarias": ["python"],
-                    "cargo_necessario": "desenvolvedor backend"
-                }
-            ]
-        },
-        {
-            "nome": "Projeto Epsilon",
-            "etapas": [
-                {
-                    "id": 1,
-                    "nome": "Levantamento de Requisitos",
-                    "duracao_dias": 12,
-                    "habilidades_necessarias": ["analysis"],
-                    "cargo_necessario": "analista"
-                },
-                {
-                    "id": 2,
-                    "nome": "Planejamento",
-                    "duracao_dias": 7,
-                    "habilidades_necessarias": ["python", "sql"],
-                    "cargo_necessario": "desenvolvedor backend"
-                },
-                {
-                    "id": 3,
-                    "nome": "Validação",
-                    "duracao_dias": 5,
-                    "habilidades_necessarias": ["qa"],
-                    "cargo_necessario": "QA"
-                }
-            ]
-        },
-        {
-            "nome": "Projeto Zeta",
-            "etapas": [
-                {
-                    "id": 1,
-                    "nome": "Arquitetura",
-                    "duracao_dias": 10,
-                    "habilidades_necessarias": ["sql", "postgresql"],
-                    "cargo_necessario": "DBA"
-                },
-                {
-                    "id": 2,
-                    "nome": "Implementação",
-                    "duracao_dias": 20,
-                    "habilidades_necessarias": ["python", "analysis"],
-                    "cargo_necessario": "desenvolvedor backend"
-                }
-            ]
-        },
-        {
-            "nome": "Projeto Theta",
-            "etapas": [
-                {
-                    "id": 1,
-                    "nome": "Definição de Escopo",
-                    "duracao_dias": 5,
-                    "habilidades_necessarias": ["analysis"],
-                    "cargo_necessario": "analista"
-                },
-                {
-                    "id": 2,
-                    "nome": "Codificação",
-                    "duracao_dias": 15,
-                    "habilidades_necessarias": ["python"],
-                    "cargo_necessario": "desenvolvedor backend"
-                },
-                {
-                    "id": 3,
-                    "nome": "Testes",
-                    "duracao_dias": 7,
-                    "habilidades_necessarias": ["qa"],
-                    "cargo_necessario": "QA"
-                }
-            ]
-        },
-        {
-            "nome": "Projeto Iota",
-            "etapas": [
-                {
-                    "id": 1,
-                    "nome": "Configuração de Ambiente",
-                    "duracao_dias": 3,
-                    "habilidades_necessarias": ["postgresql", "sql"],
-                    "cargo_necessario": "DBA"
-                },
-                {
-                    "id": 2,
-                    "nome": "Integração",
-                    "duracao_dias": 12,
-                    "habilidades_necessarias": ["python", "sql"],
-                    "cargo_necessario": "desenvolvedor backend"
-                },
-                {
-                    "id": 3,
-                    "nome": "Implantação",
-                    "duracao_dias": 8,
-                    "habilidades_necessarias": ["qa"],
-                    "cargo_necessario": "QA"
-                }
-            ]
-        },
-        {
-            "nome": "Projeto Kappa",
-            "etapas": [
-                {
-                    "id": 1,
-                    "nome": "Análise Preliminar",
-                    "duracao_dias": 10,
-                    "habilidades_necessarias": ["analysis"],
-                    "cargo_necessario": "analista"
-                },
-                {
-                    "id": 2,
-                    "nome": "Desenvolvimento Back-End",
-                    "duracao_dias": 20,
-                    "habilidades_necessarias": ["python"],
-                    "cargo_necessario": "desenvolvedor backend"
-                }
-            ]
-        }
-    ]
+    projetos = read_json_from_file("projetos.json")
 
     return colaboradores, projetos
 
@@ -346,129 +82,117 @@ def populacao_inicial(tam_pop, num_tarefas, lista_colab_ids):
     return [criar_individuo(num_tarefas, lista_colab_ids) for _ in range(tam_pop)]
 
 
-def avaliar(individuo, tarefas_globais, colaboradores):
+def avaliar(
+        individuo,
+        tarefas_globais,
+        colaboradores,
+        peso_makespan=1000
+):
     """
-    Avalia um indivíduo e retorna:
-    - Fitness (int)
-    - Detalhamento das penalidades (dict)
+    Avalia o cromossomo (indivíduo) e retorna (fitness, penalidades).
+    - As tarefas do mesmo projeto são forçadas em sequência.
+    - Tarefas de projetos diferentes podem rodar em paralelo
+      se houver colaborador(es) livres.
     """
 
-    # Para cada colaborador, guardaremos uma lista de intervalos [(start, end), ...]
-    alocacoes = {c["id"]: [] for c in colaboradores}
+    # Alocações de cada colaborador
+    alocacoes = {col["id"]: [] for col in colaboradores}
 
-    # Para cada projeto, guardaremos os intervalos também, para checar sobreposição no mesmo projeto
-    intervalos_projetos = {}
-
-    # Dicionário que guarda o 'último fim' de cada projeto
+    # Fim do projeto (garantir sequência dentro de cada projeto)
     fim_projeto = {}
-
-    # Inicializar com zero
     for t in tarefas_globais:
-        fim_projeto[t["projeto"]] = 0
-        intervalos_projetos[t["projeto"]] = []
+        if t["projeto"] not in fim_projeto:
+            fim_projeto[t["projeto"]] = 0
 
-    # Dicionário de penalidades para entender onde o fitness foi penalizado
+    # Intervalos de cada projeto (para checar sobreposição, se for proibido)
+    intervalos_projetos = {}
+    for t in tarefas_globais:
+        intervalos_projetos.setdefault(t["projeto"], [])
+
     penalidades = {
         "habilidades_incorretas": 0,
         "cargo_incorreto": 0,
         "ausencias": 0,
         "sobreposicoes_colaborador": 0,
-        "sobreposicoes_projeto": 0,
-        "ordem_incorreta": 0,  # Se você quiser penalizar ordens fora de sequência, pode usar.
+        "sobreposicoes_projeto": 0
     }
 
-    # makespan = 0
+    makespan = 0
 
-    # Mapeamento de tarefas por projeto para garantir a ordem
-    tarefas_por_projeto = {}
-    for t in tarefas_globais:
-        if t["projeto"] not in tarefas_por_projeto:
-            tarefas_por_projeto[t["projeto"]] = []
-        tarefas_por_projeto[t["projeto"]].append(t)
-
-    # Ordenar tarefas de cada projeto por task_id (garante sequência lógica)
-    for projeto in tarefas_por_projeto:
-        tarefas_por_projeto[projeto] = sorted(
-            tarefas_por_projeto[projeto], key=lambda x: x["task_id"]
-        )
-
-    # Avaliação das tarefas no cromossomo
-    for i, t in enumerate(tarefas_globais):
+    for i, tarefa in enumerate(tarefas_globais):
         cid = individuo[i]
-        colab = next(x for x in colaboradores if x["id"] == cid)
+        colab = next(c for c in colaboradores if c["id"] == cid)
 
-        # 1) Penalizar se colaborador não tem as habilidades
-        if not t["habilidades_necessarias"].issubset(colab["habilidades"]):
+        # Se colaborador não possui todas as habilidades
+        if not tarefa["habilidades_necessarias"].issubset(colab["habilidades"]):
             penalidades["habilidades_incorretas"] += 10_000
 
-        # 2) Penalizar se colaborador não tem o cargo exigido
-        if t["cargo_necessario"] != colab["cargo"]:
+        # Se cargo não confere
+        if tarefa["cargo_necessario"] != colab["cargo"]:
             penalidades["cargo_incorreto"] += 10_000
 
-        # 3) Calcular início da tarefa
-        #    - Deve respeitar o término da etapa anterior do mesmo projeto.
-        #    - Deve respeitar quando o colaborador estiver livre.
+        # Início da tarefa:
+        #   - Respeitar o fim do projeto (sequência) para este projeto
+        #   - Respeitar o fim do mesmo colaborador (sem sobreposição de si mesmo)
+        proj_atual = tarefa["projeto"]
+        ultimo_fim_proj = fim_projeto[proj_atual]
 
-        # Qual foi o último fim do PROJETO até agora?
-        ultimo_fim_proj = fim_projeto[t["projeto"]]
-
-        # Qual foi o último fim do COLABORADOR?
-        if alocacoes[cid]:
+        if len(alocacoes[cid]) > 0:
             ultimo_fim_colab = max(e for (s, e) in alocacoes[cid])
         else:
             ultimo_fim_colab = 0
 
-        # A tarefa não pode começar antes do projeto e nem antes do colab estar livre
         inicio_tarefa = max(ultimo_fim_proj, ultimo_fim_colab)
-        fim_tarefa = inicio_tarefa + t["duracao_dias"]
+        fim_tarefa = inicio_tarefa + tarefa["duracao_dias"]
 
-        # 4) Verificar ausências desse colaborador (por simplicidade, assumindo dias inteiros)
+        # Ausências
+        # (aqui poderia ser set de dias inteiros, mas você tem como strings.
+        #  então revise se está usando 'int' ou datas.
+        #  no exemplo, iremos supor que 'colab["ausencias"]' possa ser um set de ints)
         for dia in range(inicio_tarefa, fim_tarefa):
             if dia in colab["ausencias"]:
                 penalidades["ausencias"] += 500
                 break
 
-        # 5) Atualizar fim do projeto e intervalos
-        fim_projeto[t["projeto"]] = fim_tarefa
+        # Atualizar fim do projeto
+        fim_projeto[proj_atual] = fim_tarefa
+
+        # Registrar no colaborador
         alocacoes[cid].append((inicio_tarefa, fim_tarefa))
-        intervalos_projetos[t["projeto"]].append((inicio_tarefa, fim_tarefa))
 
-        # 6) Atualizar makespan (tempo total)
-        # makespan = max(makespan, fim_tarefa)
+        # Registrar no projeto
+        intervalos_projetos[proj_atual].append((inicio_tarefa, fim_tarefa))
 
-    # ------------------------------------------------------------------
-    # 7) Verificar sobreposições para o mesmo colaborador
-    #    (Se quiser permitir que termine no dia X e outra comece no dia X sem penalidade,
-    #    use 'e1 <= s2 ou e2 <= s1')
-    # ------------------------------------------------------------------
+        # Atualizar makespan
+        if fim_tarefa > makespan:
+            makespan = fim_tarefa
+
+    # Verificar sobreposições de um mesmo colaborador
     for cid, intervals in alocacoes.items():
-        for i1 in range(len(intervals)):
-            for i2 in range(i1 + 1, len(intervals)):
-                s1, e1 = intervals[i1]
-                s2, e2 = intervals[i2]
-                # Se NÃO for verdade que (e1 <= s2 ou e2 <= s1), então é sobreposição
-                if not (e1 <= s2 or e2 <= s1):
+        intervals_sorted = sorted(intervals, key=lambda x: x[0])
+        for i1 in range(len(intervals_sorted)):
+            for i2 in range(i1 + 1, len(intervals_sorted)):
+                s1, e1 = intervals_sorted[i1]
+                s2, e2 = intervals_sorted[i2]
+                # Se (s1 < e2) e (s2 < e1), overlap
+                if (s1 < e2) and (s2 < e1):
                     penalidades["sobreposicoes_colaborador"] += 2000
 
-    # ------------------------------------------------------------------
-    # 8) Verificar sobreposições dentro do mesmo projeto
-    # ------------------------------------------------------------------
-    for projeto, intervals in intervalos_projetos.items():
-        for i1 in range(len(intervals)):
-            for i2 in range(i1 + 1, len(intervals)):
-                s1, e1 = intervals[i1]
-                s2, e2 = intervals[i2]
-                if not (e1 <= s2 or e2 <= s1):
+    # Verificar sobreposições dentro do mesmo projeto (se quiser proibir)
+    # mas aqui, se voce REALMENTE quer 100% sequência,
+    # isso já é garantido com 'fim_projeto', então não necessariamente precisa.
+    for pid, intervals in intervalos_projetos.items():
+        intervals_sorted = sorted(intervals, key=lambda x: x[0])
+        for i1 in range(len(intervals_sorted)):
+            for i2 in range(i1 + 1, len(intervals_sorted)):
+                s1, e1 = intervals_sorted[i1]
+                s2, e2 = intervals_sorted[i2]
+                if (s1 < e2) and (s2 < e1):
+                    # Se for 100% proibido rodar duas etapas do mesmo projeto ao mesmo tempo:
                     penalidades["sobreposicoes_projeto"] += 5000
 
-    # 9) Se você quiser checar "ordem_incorreta", poderia, por exemplo,
-    #    verificar se a tarefa i (task_id) sempre começa depois da (i-1),
-    #    mas a maior parte disso já está coberta por fim_projeto.
-    #    Fica como opcional:
-    # penalidades["ordem_incorreta"] += ...
-
-    # 10) Soma das penalidades + makespan
-    fitness = sum(penalidades.values())
+    soma_pens = sum(penalidades.values())
+    fitness = soma_pens + makespan * peso_makespan
     return fitness, penalidades
 
 
@@ -582,13 +306,13 @@ def algoritmo_genetico(tam_pop, n_gen, pc, pm, tarefas_globais, colaboradores):
 ##############################################################################
 
 PROJECT_COLORS = {
-    "Projeto Alpha": "#FF5733",  # Vermelho-alaranjado
-    "Projeto Beta": "#33FF55",  # Verde
-    "Projeto Gama": "#3355FF",  # Azul
-    "Projeto Delta": "#FF33F7",  # Rosa
-    "Projeto Epsilon": "#FFD700",  # Dourado
-    "Projeto Zeta": "#FF00FF",  # Laranja-avermelhado
-    "Projeto Theta": "#7B68EE",  # Roxo
+    "Projeto Alpha": "#AA5733",  # Vermelho-alaranjado
+    "Projeto Beta": "#33AA55",  # Verde
+    "Projeto Gama": "#3355AA",  # Azul
+    "Projeto Delta": "#AA33F7",  # Rosa
+    "Projeto Epsilon": "#AAD700",  # Dourado
+    "Projeto Zeta": "#AA00AA",  # Laranja-avermelhado
+    "Projeto Theta": "#7B68AA",  # Roxo
     "Projeto Iota": "#20B2AA",  # Azul-esverdeado
     "Projeto Kappa": "#808080",  # Cinza
 }

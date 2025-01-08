@@ -1,0 +1,294 @@
+[
+  {
+    "id": 101,
+    "nome": "Willian",
+    "habilidades": [
+      "python",
+      "sql"
+    ],
+    "cargo": "desenvolvedor backend",
+    "ausencias": [
+      "2024-01-05",
+      "2024-02-01"
+    ]
+  },
+  {
+    "id": 102,
+    "nome": "Marco",
+    "habilidades": [
+      "analysis",
+      "qa",
+      "audit"
+    ],
+    "cargo": "QA",
+    "ausencias": [
+      "2024-01-15",
+      "2024-01-16"
+    ]
+  },
+  {
+    "id": 103,
+    "nome": "Rafaela",
+    "habilidades": [
+      "analysis",
+      "python"
+    ],
+    "cargo": "analista",
+    "ausencias": []
+  },
+  {
+    "id": 104,
+    "nome": "Luiz",
+    "habilidades": [
+      "postgresql",
+      "sql"
+    ],
+    "cargo": "DBA",
+    "ausencias": [
+      "2024-01-10",
+      "2024-01-11"
+    ]
+  },
+  {
+    "id": 105,
+    "nome": "Juliana",
+    "habilidades": [
+      "qa",
+      "audit",
+      "analysis"
+    ],
+    "cargo": "QA",
+    "ausencias": [
+      "2024-01-20"
+    ]
+  },
+  {
+    "id": 106,
+    "nome": "Paulo",
+    "habilidades": [
+      "python",
+      "sql",
+      "analysis"
+    ],
+    "cargo": "desenvolvedor backend",
+    "ausencias": [
+      "2024-01-25",
+      "2024-01-26"
+    ]
+  },
+  {
+    "id": 107,
+    "nome": "Fernanda",
+    "habilidades": [
+      "analysis",
+      "python",
+      "audit"
+    ],
+    "cargo": "analista",
+    "ausencias": [
+      "2024-02-02"
+    ]
+  },
+  {
+    "id": 108,
+    "nome": "Carla",
+    "habilidades": [
+      "qa",
+      "audit"
+    ],
+    "cargo": "QA",
+    "ausencias": [
+      "2024-01-29",
+      "2024-02-05"
+    ]
+  },
+  {
+    "id": 109,
+    "nome": "Sérgio",
+    "habilidades": [
+      "postgresql",
+      "sql"
+    ],
+    "cargo": "DBA",
+    "ausencias": []
+  },
+  {
+    "id": 110,
+    "nome": "Mateus",
+    "habilidades": [
+      "analysis"
+    ],
+    "cargo": "analista",
+    "ausencias": [
+      "2024-01-12"
+    ]
+  },
+  {
+    "id": 111,
+    "nome": "Gabriela",
+    "habilidades": [
+      "analysis",
+      "python"
+    ],
+    "cargo": "analista",
+    "ausencias": []
+  },
+  {
+    "id": 112,
+    "nome": "Thiago",
+    "habilidades": [
+      "analysis",
+      "audit"
+    ],
+    "cargo": "analista",
+    "ausencias": [
+      "2024-01-18",
+      "2024-01-19"
+    ]
+  },
+  {
+    "id": 113,
+    "nome": "Larissa",
+    "habilidades": [
+      "analysis",
+      "python",
+      "sql"
+    ],
+    "cargo": "analista",
+    "ausencias": [
+      "2024-02-03"
+    ]
+  },
+  {
+    "id": 114,
+    "nome": "Ricardo",
+    "habilidades": [
+      "python",
+      "sql"
+    ],
+    "cargo": "desenvolvedor backend",
+    "ausencias": []
+  },
+  {
+    "id": 115,
+    "nome": "Beatriz",
+    "habilidades": [
+      "python",
+      "analysis"
+    ],
+    "cargo": "desenvolvedor backend",
+    "ausencias": [
+      "2024-01-22"
+    ]
+  },
+  {
+    "id": 116,
+    "nome": "Renan",
+    "habilidades": [
+      "python",
+      "sql",
+      "analysis"
+    ],
+    "cargo": "desenvolvedor backend",
+    "ausencias": [
+      "2024-01-08",
+      "2024-01-09"
+    ]
+  },
+  {
+    "id": 117,
+    "nome": "Patrícia",
+    "habilidades": [
+      "python",
+      "audit"
+    ],
+    "cargo": "desenvolvedor backend",
+    "ausencias": [
+      "2024-01-28"
+    ]
+  },
+  {
+    "id": 118,
+    "nome": "Leonardo",
+    "habilidades": [
+      "qa"
+    ],
+    "cargo": "QA",
+    "ausencias": []
+  },
+  {
+    "id": 119,
+    "nome": "Amanda",
+    "habilidades": [
+      "qa",
+      "analysis"
+    ],
+    "cargo": "QA",
+    "ausencias": [
+      "2024-01-17"
+    ]
+  },
+  {
+    "id": 120,
+    "nome": "Gustavo",
+    "habilidades": [
+      "qa",
+      "audit"
+    ],
+    "cargo": "QA",
+    "ausencias": [
+      "2024-01-27",
+      "2024-01-30"
+    ]
+  },
+  {
+    "id": 121,
+    "nome": "Bianca",
+    "habilidades": [
+      "qa",
+      "analysis",
+      "audit"
+    ],
+    "cargo": "QA",
+    "ausencias": []
+  },
+  {
+    "id": 122,
+    "nome": "Felipe",
+    "habilidades": [
+      "sql",
+      "postgresql"
+    ],
+    "cargo": "DBA",
+    "ausencias": [
+      "2024-01-13"
+    ]
+  },
+  {
+    "id": 123,
+    "nome": "Tamara",
+    "habilidades": [
+      "sql",
+      "postgresql",
+      "analysis"
+    ],
+    "cargo": "DBA",
+    "ausencias": [
+      "2024-02-04"
+    ]
+  },
+  {
+    "id": 124,
+    "nome": "Bruno",
+    "habilidades": [
+      "sql",
+      "postgresql",
+      "audit"
+    ],
+    "cargo": "DBA",
+    "ausencias": [
+      "2024-01-23",
+      "2024-01-24"
+    ]
+  }
+]
