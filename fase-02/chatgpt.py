@@ -1,11 +1,10 @@
 import datetime
+import json
 import random
 
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-
-import json
 
 
 ##############################################################################
@@ -464,6 +463,96 @@ def verificar_conflitos(df_result):
     return df_conflitos
 
 
+def gerar_tabela_html(df, duracao_maxima):
+    """
+    Gera uma tabela HTML completa com uma coluna Gantt.
+
+    Parâmetros:
+    - df: DataFrame com os dados.
+    - duracao_maxima: Duração total máxima para normalizar as barras.
+
+    Retorno:
+    - Uma string contendo o HTML completo da tabela.
+    """
+    # Cabeçalho da tabela
+    tabela_html = """
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .gantt {
+            width: 100%;
+            height: 15px;
+            position: relative;
+            background-color: #e0e0e0;
+        }
+        .gantt-bar {
+            position: absolute;
+            height: 100%;
+            background-color: #1f77b4;
+        }
+    </style>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 150px;">Projeto</th>
+                <th>Nome Tarefa</th>
+                <th>Início (dias)</th>
+                <th>Fim (dias)</th>
+                <th>Colaborador</th>
+                <th>Dias</th>
+                <th style="width: 150px;">Gantt</th>
+            </tr>
+        </thead>
+        <tbody>
+    """
+
+    # Adicionar as linhas da tabela
+    for _, row in df.iterrows():
+        # Calcular a posição e largura da barra Gantt
+        proporcao_inicio = (row["Início (dias)"] / duracao_maxima) * 100
+        proporcao_duracao = ((row["Fim (dias)"] - row["Início (dias)"]) / duracao_maxima) * 100
+
+        gantt_html = f"""
+        <div class="gantt">
+            <div class="gantt-bar" style="left: {proporcao_inicio}%; width: {proporcao_duracao}%;"></div>
+        </div>
+        """
+
+        tabela_html += f"""
+        <tr>
+            <td>{row['Projeto']}</td>
+            <td>{row['Nome Tarefa']}</td>
+            <td>{row['Início (dias)']}</td>
+            <td>{row['Fim (dias)']}</td>
+            <td>{row['Colaborador']}</td>
+            <td>{row['Duração (dias)']}</td>
+            <td>{gantt_html}</td>
+        </tr>
+        """
+
+    # Fechar a tabela
+    tabela_html += """
+        </tbody>
+    </table>
+    """
+    return tabela_html
+
+
 def main():
     st.title("Algoritmo Genético para Alocação de Colaboradores")
 
@@ -481,8 +570,6 @@ def main():
     colaboradores, projetos = gerar_dados()
 
     if st.sidebar.button("Executar Algoritmo"):
-        # Gera dados
-
         tarefas_globais, colaboradores = montar_tarefas_globais(colaboradores, projetos)
 
         project_colors = {proj["nome"]: proj["color"] for proj in projetos}
@@ -526,12 +613,17 @@ def main():
 
         df_res = pd.DataFrame(rows)
 
+        # Adicionar a tabela Gantt como HTML
+        duracao_maxima = df_res["Fim (dias)"].max()
+        tabela_html = gerar_tabela_html(df_res, duracao_maxima)
+
         st.session_state["df_result"] = df_res
+        st.session_state["table_result"] = tabela_html
         st.session_state["melhor_fit"] = best_val
         st.session_state["hist_fit"] = hist_fit
         st.session_state["detalhes_penalidades"] = detalhes_penalidades
 
-    tab_result, tab_calendar = st.tabs(["Resultados do Algoritmo", "Calendário & Filtros"])
+    tab_result, tab_calendar, tab_gantt = st.tabs(["Resultados do Algoritmo", "Calendário & Filtros", "Gantt"])
 
     with tab_result:
         if st.session_state["df_result"] is None:
@@ -563,7 +655,7 @@ def main():
                 st.warning("Há conflitos de alocação! Veja abaixo:")
                 st.table(df_conf)
 
-        # with tab_calendar:
+    with tab_calendar:
         df_result = st.session_state["df_result"]
         if df_result is None:
             st.info("Rode o Algoritmo.")
@@ -613,7 +705,8 @@ def main():
 
             for motivo, valor in st.session_state["detalhes_penalidades"].items():
                 st.write(f"**{motivo.replace('_', ' ').capitalize()}:** {valor}")
-    # with tab_detalhes:
+    with tab_gantt:
+        components.html(st.session_state["table_result"], height=2600, scrolling=True)
 
 
 if __name__ == "__main__":
