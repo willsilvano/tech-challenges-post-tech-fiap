@@ -1,259 +1,199 @@
 [
   {
-    "nome": "Projeto Alpha",
+    "nome": "Projeto One",
+    "color": "#AA5733",
     "etapas": [
       {
         "id": 1,
         "nome": "Análise",
-        "duracao_dias": 10,
+        "duracao_dias": 5,
         "habilidades_necessarias": [
-          "analysis"
+          "analise"
         ],
         "cargo_necessario": "analista"
       },
       {
         "id": 2,
         "nome": "Desenvolvimento",
-        "duracao_dias": 15,
-        "habilidades_necessarias": [
-          "python"
-        ],
-        "cargo_necessario": "desenvolvedor backend"
-      },
-      {
-        "id": 3,
-        "nome": "Revisão SQL",
-        "duracao_dias": 5,
-        "habilidades_necessarias": [
-          "sql"
-        ],
-        "cargo_necessario": "desenvolvedor backend"
-      }
-    ]
-  },
-  {
-    "nome": "Projeto Beta",
-    "etapas": [
-      {
-        "id": 1,
-        "nome": "Análise Beta",
-        "duracao_dias": 5,
-        "habilidades_necessarias": [
-          "analysis"
-        ],
-        "cargo_necessario": "analista"
-      },
-      {
-        "id": 2,
-        "nome": "QA Beta",
-        "duracao_dias": 10,
-        "habilidades_necessarias": [
-          "qa"
-        ],
-        "cargo_necessario": "QA"
-      },
-      {
-        "id": 3,
-        "nome": "Ajustes no Banco",
         "duracao_dias": 8,
         "habilidades_necessarias": [
-          "sql",
-          "postgresql"
-        ],
-        "cargo_necessario": "DBA"
-      }
-    ]
-  },
-  {
-    "nome": "Projeto Gama",
-    "etapas": [
-      {
-        "id": 1,
-        "nome": "Modelagem Gama",
-        "duracao_dias": 7,
-        "habilidades_necessarias": [
-          "sql"
-        ],
-        "cargo_necessario": "DBA"
-      },
-      {
-        "id": 2,
-        "nome": "Auditoria Gama",
-        "duracao_dias": 5,
-        "habilidades_necessarias": [
-          "audit"
-        ],
-        "cargo_necessario": "QA"
-      }
-    ]
-  },
-  {
-    "nome": "Projeto Delta",
-    "etapas": [
-      {
-        "id": 1,
-        "nome": "Análise Delta",
-        "duracao_dias": 8,
-        "habilidades_necessarias": [
-          "analysis"
-        ],
-        "cargo_necessario": "analista"
-      },
-      {
-        "id": 2,
-        "nome": "Dev Delta",
-        "duracao_dias": 10,
-        "habilidades_necessarias": [
           "python"
         ],
-        "cargo_necessario": "desenvolvedor backend"
-      }
-    ]
-  },
-  {
-    "nome": "Projeto Epsilon",
-    "etapas": [
-      {
-        "id": 1,
-        "nome": "Levantamento de Requisitos",
-        "duracao_dias": 12,
-        "habilidades_necessarias": [
-          "analysis"
-        ],
-        "cargo_necessario": "analista"
-      },
-      {
-        "id": 2,
-        "nome": "Planejamento",
-        "duracao_dias": 7,
-        "habilidades_necessarias": [
-          "python",
-          "sql"
-        ],
-        "cargo_necessario": "desenvolvedor backend"
+        "cargo_necessario": "desenvolvedor frontend"
       },
       {
         "id": 3,
-        "nome": "Validação",
-        "duracao_dias": 5,
-        "habilidades_necessarias": [
-          "qa"
-        ],
-        "cargo_necessario": "QA"
-      }
-    ]
-  },
-  {
-    "nome": "Projeto Zeta",
-    "etapas": [
-      {
-        "id": 1,
-        "nome": "Arquitetura",
-        "duracao_dias": 10,
-        "habilidades_necessarias": [
-          "sql",
-          "postgresql"
-        ],
-        "cargo_necessario": "DBA"
-      },
-      {
-        "id": 2,
-        "nome": "Implementação",
-        "duracao_dias": 20,
-        "habilidades_necessarias": [
-          "python",
-          "analysis"
-        ],
-        "cargo_necessario": "desenvolvedor backend"
-      }
-    ]
-  },
-  {
-    "nome": "Projeto Theta",
-    "etapas": [
-      {
-        "id": 1,
-        "nome": "Definição de Escopo",
-        "duracao_dias": 5,
-        "habilidades_necessarias": [
-          "analysis"
-        ],
-        "cargo_necessario": "analista"
-      },
-      {
-        "id": 2,
-        "nome": "Codificação",
-        "duracao_dias": 15,
-        "habilidades_necessarias": [
-          "python"
-        ],
-        "cargo_necessario": "desenvolvedor backend"
-      },
-      {
-        "id": 3,
-        "nome": "Testes",
-        "duracao_dias": 7,
-        "habilidades_necessarias": [
-          "qa"
-        ],
-        "cargo_necessario": "QA"
-      }
-    ]
-  },
-  {
-    "nome": "Projeto Iota",
-    "etapas": [
-      {
-        "id": 1,
-        "nome": "Configuração de Ambiente",
+        "nome": "Auditoria",
         "duracao_dias": 3,
         "habilidades_necessarias": [
-          "postgresql",
-          "sql"
+          "auditoria"
         ],
-        "cargo_necessario": "DBA"
-      },
-      {
-        "id": 2,
-        "nome": "Integração",
-        "duracao_dias": 12,
-        "habilidades_necessarias": [
-          "python",
-          "sql"
-        ],
-        "cargo_necessario": "desenvolvedor backend"
-      },
-      {
-        "id": 3,
-        "nome": "Implantação",
-        "duracao_dias": 8,
-        "habilidades_necessarias": [
-          "qa"
-        ],
-        "cargo_necessario": "QA"
+        "cargo_necessario": "qa"
       }
     ]
   },
   {
-    "nome": "Projeto Kappa",
+    "nome": "Projeto Two",
+    "color": "#3355AA",
     "etapas": [
       {
         "id": 1,
-        "nome": "Análise Preliminar",
-        "duracao_dias": 10,
+        "nome": "Análise",
+        "duracao_dias": 6,
         "habilidades_necessarias": [
-          "analysis"
+          "analise"
         ],
         "cargo_necessario": "analista"
       },
       {
         "id": 2,
-        "nome": "Desenvolvimento Back-End",
-        "duracao_dias": 20,
+        "nome": "Desenvolvimento",
+        "duracao_dias": 10,
+        "habilidades_necessarias": [
+          "java"
+        ],
+        "cargo_necessario": "desenvolvedor backend"
+      },
+      {
+        "id": 3,
+        "nome": "Auditoria",
+        "duracao_dias": 4,
+        "habilidades_necessarias": [
+          "auditoria"
+        ],
+        "cargo_necessario": "qa"
+      }
+    ]
+  },
+  {
+    "nome": "Projeto Three",
+    "color": "#33AA55",
+    "etapas": [
+      {
+        "id": 1,
+        "nome": "Análise",
+        "duracao_dias": 4,
+        "habilidades_necessarias": [
+          "analise"
+        ],
+        "cargo_necessario": "analista"
+      },
+      {
+        "id": 2,
+        "nome": "Desenvolvimento",
+        "duracao_dias": 9,
         "habilidades_necessarias": [
           "python"
         ],
         "cargo_necessario": "desenvolvedor backend"
+      },
+      {
+        "id": 3,
+        "nome": "Auditoria",
+        "duracao_dias": 5,
+        "habilidades_necessarias": [
+          "auditoria"
+        ],
+        "cargo_necessario": "qa"
+      }
+    ]
+  },
+  {
+    "nome": "Projeto Four",
+    "color": "#AA00AA",
+    "etapas": [
+      {
+        "id": 1,
+        "nome": "Análise",
+        "duracao_dias": 6,
+        "habilidades_necessarias": [
+          "analise"
+        ],
+        "cargo_necessario": "analista"
+      },
+      {
+        "id": 2,
+        "nome": "Desenvolvimento",
+        "duracao_dias": 10,
+        "habilidades_necessarias": [
+          "python"
+        ],
+        "cargo_necessario": "desenvolvedor backend"
+      },
+      {
+        "id": 3,
+        "nome": "Auditoria",
+        "duracao_dias": 4,
+        "habilidades_necessarias": [
+          "auditoria"
+        ],
+        "cargo_necessario": "qa"
+      }
+    ]
+  },
+  {
+    "nome": "Projeto Five",
+    "color": "#AAD700",
+    "etapas": [
+      {
+        "id": 1,
+        "nome": "Análise",
+        "duracao_dias": 5,
+        "habilidades_necessarias": [
+          "analise"
+        ],
+        "cargo_necessario": "analista"
+      },
+      {
+        "id": 2,
+        "nome": "Desenvolvimento",
+        "duracao_dias": 8,
+        "habilidades_necessarias": [
+          "java"
+        ],
+        "cargo_necessario": "desenvolvedor backend"
+      },
+      {
+        "id": 3,
+        "nome": "Auditoria",
+        "duracao_dias": 5,
+        "habilidades_necessarias": [
+          "auditoria"
+        ],
+        "cargo_necessario": "qa"
+      }
+    ]
+  },
+  {
+    "nome": "Projeto Six",
+    "color": "#AA33F7",
+    "etapas": [
+      {
+        "id": 1,
+        "nome": "Análise",
+        "duracao_dias": 7,
+        "habilidades_necessarias": [
+          "analise"
+        ],
+        "cargo_necessario": "analista"
+      },
+      {
+        "id": 2,
+        "nome": "Desenvolvimento",
+        "duracao_dias": 9,
+        "habilidades_necessarias": [
+          "python"
+        ],
+        "cargo_necessario": "desenvolvedor backend"
+      },
+      {
+        "id": 3,
+        "nome": "Auditoria",
+        "duracao_dias": 6,
+        "habilidades_necessarias": [
+          "auditoria"
+        ],
+        "cargo_necessario": "qa"
       }
     ]
   }

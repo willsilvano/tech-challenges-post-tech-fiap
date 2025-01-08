@@ -305,18 +305,6 @@ def algoritmo_genetico(tam_pop, n_gen, pc, pm, tarefas_globais, colaboradores):
 # 4. FULLCALENDAR
 ##############################################################################
 
-PROJECT_COLORS = {
-    "Projeto Alpha": "#AA5733",  # Vermelho-alaranjado
-    "Projeto Beta": "#33AA55",  # Verde
-    "Projeto Gama": "#3355AA",  # Azul
-    "Projeto Delta": "#AA33F7",  # Rosa
-    "Projeto Epsilon": "#AAD700",  # Dourado
-    "Projeto Zeta": "#AA00AA",  # Laranja-avermelhado
-    "Projeto Theta": "#7B68AA",  # Roxo
-    "Projeto Iota": "#20B2AA",  # Azul-esverdeado
-    "Projeto Kappa": "#808080",  # Cinza
-}
-
 
 def gerar_fullcalendar_html(eventos, initial_date):
     import json
@@ -487,10 +475,14 @@ def main():
     pc = st.sidebar.slider("Prob. Crossover", 0.0, 1.0, 0.7)
     pm = st.sidebar.slider("Prob. Mutação", 0.0, 1.0, 0.3)
 
+    colaboradores, projetos = gerar_dados()
+
     if st.sidebar.button("Executar Algoritmo"):
         # Gera dados
-        colaboradores, projetos = gerar_dados()
+
         tarefas_globais, colaboradores = montar_tarefas_globais(colaboradores, projetos)
+
+        project_colors = {proj["nome"]: proj["color"] for proj in projetos}
 
         best_ind, best_val, hist_fit, detalhes_penalidades = algoritmo_genetico(
             tam_pop, n_gen, pc, pm, tarefas_globais, colaboradores
@@ -598,7 +590,7 @@ def main():
                         "title": f"{row['Nome Tarefa']} - {row['Colaborador']}",
                         "start": (datetime.date.today() + datetime.timedelta(days=ini_dias)).strftime("%Y-%m-%d"),
                         "end": (datetime.date.today() + datetime.timedelta(days=fim_dias)).strftime("%Y-%m-%d"),
-                        "color": PROJECT_COLORS.get(row["Projeto"], "#999999"),
+                        "color": project_colors.get(row["Projeto"], "#999999"),
                         "extendedProps": {
                             "projeto": row["Projeto"],
                             "tarefa": row["Nome Tarefa"],
