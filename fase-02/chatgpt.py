@@ -889,8 +889,11 @@ def main():
                 components.html(cal_html, height=700, scrolling=True)
 
         st.subheader("Detalhamento das Penalidades")
-        for motivo, valor in st.session_state["detalhes_penalidades"].items():
-            st.write(f"**{motivo.replace('_', ' ').capitalize()}:** {valor}")
+
+        if "detalhes_penalidades" in st.session_state:
+
+            for motivo, valor in st.session_state["detalhes_penalidades"].items():
+                st.write(f"**{motivo.replace('_', ' ').capitalize()}:** {valor}")
     # with tab_detalhes:
 
 
