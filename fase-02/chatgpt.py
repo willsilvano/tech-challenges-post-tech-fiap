@@ -86,7 +86,7 @@ def avaliar(
         individuo,
         tarefas_globais,
         colaboradores,
-        peso_makespan=1000
+        peso_makespan=500
 ):
     """
     Avalia o cromossomo (indivíduo) e retorna (fitness, penalidades).
@@ -191,8 +191,11 @@ def avaliar(
                     # Se for 100% proibido rodar duas etapas do mesmo projeto ao mesmo tempo:
                     penalidades["sobreposicoes_projeto"] += 5000
 
+    # Adicionar penalidade do makespan ao dicionário
+    penalidades["makespan"] = makespan * peso_makespan
+
     soma_pens = sum(penalidades.values())
-    fitness = soma_pens + makespan * peso_makespan
+    fitness = soma_pens + penalidades["makespan"]
     return fitness, penalidades
 
 
