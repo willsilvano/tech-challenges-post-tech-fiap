@@ -6,15 +6,9 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
-
-##############################################################################
-# 1. FUNÇÕES DE DATA
-##############################################################################
+import plotly.graph_objects as go
 
 def date_to_int(date_str, ref_date):
-    """
-    Converte uma string 'YYYY-MM-DD' em um inteiro (dias) desde ref_date.
-    """
     ano, mes, dia = map(int, date_str.split("-"))
     d = datetime.date(ano, mes, dia)
     delta = d - ref_date
@@ -22,9 +16,6 @@ def date_to_int(date_str, ref_date):
 
 
 def int_to_date(days, ref_date):
-    """
-    Converte um inteiro (dias desde ref_date) em 'YYYY-MM-DD'.
-    """
     target_date = ref_date + datetime.timedelta(days=days)
     return target_date.strftime("%Y-%m-%d")
 
@@ -35,16 +26,7 @@ def read_json_from_file(file_path):
     return data
 
 
-##############################################################################
-# 2. GERAÇÃO DE DADOS (MAIS COLABORADORES E PROJETOS)
-##############################################################################
-
 def gerar_dados():
-    """
-    Gera e retorna:
-      - colaboradores (lista de dicionários)
-      - projetos (lista de dicionários, cada um com etapas)
-    """
     colaboradores = read_json_from_file("colaboradores.json")
 
     projetos = read_json_from_file("projetos.json")
@@ -69,10 +51,6 @@ def montar_tarefas_globais(colaboradores, projetos):
     return tarefas_globais, colaboradores
 
 
-##############################################################################
-# 3. FUNÇÕES DO GA
-##############################################################################
-
 def criar_individuo(num_tarefas, lista_colab_ids):
     return [random.choice(lista_colab_ids) for _ in range(num_tarefas)]
 
@@ -87,23 +65,13 @@ def avaliar(
         colaboradores,
         peso_makespan=500
 ):
-    """
-    Avalia o cromossomo (indivíduo) e retorna (fitness, penalidades).
-    - As tarefas do mesmo projeto são forçadas em sequência.
-    - Tarefas de projetos diferentes podem rodar em paralelo
-      se houver colaborador(es) livres.
-    """
-
-    # Alocações de cada colaborador
     alocacoes = {col["id"]: [] for col in colaboradores}
 
-    # Fim do projeto (garantir sequência dentro de cada projeto)
     fim_projeto = {}
     for t in tarefas_globais:
         if t["projeto"] not in fim_projeto:
             fim_projeto[t["projeto"]] = 0
 
-    # Intervalos de cada projeto (para checar sobreposição, se for proibido)
     intervalos_projetos = {}
     for t in tarefas_globais:
         intervalos_projetos.setdefault(t["projeto"], [])
@@ -122,17 +90,12 @@ def avaliar(
         cid = individuo[i]
         colab = next(c for c in colaboradores if c["id"] == cid)
 
-        # Se colaborador não possui todas as habilidades
         if not tarefa["habilidades_necessarias"].issubset(colab["habilidades"]):
             penalidades["habilidades_incorretas"] += 10_000
 
-        # Se cargo não confere
         if tarefa["cargo_necessario"] != colab["cargo"]:
             penalidades["cargo_incorreto"] += 10_000
 
-        # Início da tarefa:
-        #   - Respeitar o fim do projeto (sequência) para este projeto
-        #   - Respeitar o fim do mesmo colaborador (sem sobreposição de si mesmo)
         proj_atual = tarefa["projeto"]
         ultimo_fim_proj = fim_projeto[proj_atual]
 
@@ -144,42 +107,29 @@ def avaliar(
         inicio_tarefa = max(ultimo_fim_proj, ultimo_fim_colab)
         fim_tarefa = inicio_tarefa + tarefa["duracao_dias"]
 
-        # Ausências
-        # (aqui poderia ser set de dias inteiros, mas você tem como strings.
-        #  então revise se está usando 'int' ou datas.
-        #  no exemplo, iremos supor que 'colab["ausencias"]' possa ser um set de ints)
         for dia in range(inicio_tarefa, fim_tarefa):
             if dia in colab["ausencias"]:
                 penalidades["ausencias"] += 500
                 break
 
-        # Atualizar fim do projeto
         fim_projeto[proj_atual] = fim_tarefa
 
-        # Registrar no colaborador
         alocacoes[cid].append((inicio_tarefa, fim_tarefa))
 
-        # Registrar no projeto
         intervalos_projetos[proj_atual].append((inicio_tarefa, fim_tarefa))
 
-        # Atualizar makespan
         if fim_tarefa > makespan:
             makespan = fim_tarefa
 
-    # Verificar sobreposições de um mesmo colaborador
     for cid, intervals in alocacoes.items():
         intervals_sorted = sorted(intervals, key=lambda x: x[0])
         for i1 in range(len(intervals_sorted)):
             for i2 in range(i1 + 1, len(intervals_sorted)):
                 s1, e1 = intervals_sorted[i1]
                 s2, e2 = intervals_sorted[i2]
-                # Se (s1 < e2) e (s2 < e1), overlap
                 if (s1 < e2) and (s2 < e1):
                     penalidades["sobreposicoes_colaborador"] += 2000
 
-    # Verificar sobreposições dentro do mesmo projeto (se quiser proibir)
-    # mas aqui, se voce REALMENTE quer 100% sequência,
-    # isso já é garantido com 'fim_projeto', então não necessariamente precisa.
     for pid, intervals in intervalos_projetos.items():
         intervals_sorted = sorted(intervals, key=lambda x: x[0])
         for i1 in range(len(intervals_sorted)):
@@ -187,10 +137,8 @@ def avaliar(
                 s1, e1 = intervals_sorted[i1]
                 s2, e2 = intervals_sorted[i2]
                 if (s1 < e2) and (s2 < e1):
-                    # Se for 100% proibido rodar duas etapas do mesmo projeto ao mesmo tempo:
                     penalidades["sobreposicoes_projeto"] += 5000
 
-    # Adicionar penalidade do makespan ao dicionário
     penalidades["makespan"] = makespan * peso_makespan
 
     soma_pens = sum(penalidades.values())
@@ -227,18 +175,10 @@ def mutacao(individuo, lista_colab_ids, taxa_mut=0.1):
 
 
 def algoritmo_genetico(tam_pop, n_gen, pc, pm, tarefas_globais, colaboradores):
-    """
-    Retorna:
-      best_sol (lista de IDs)
-      best_fit (float com o fitness)
-      historico_fitness (lista com o melhor fitness a cada geração)
-      detalhes_penalidades (dict com penalidades acumuladas do melhor indivíduo)
-    """
     num_t = len(tarefas_globais)
     colab_ids = [c["id"] for c in colaboradores]
     pop = populacao_inicial(tam_pop, num_t, colab_ids)
 
-    # Avaliação inicial
     fits_and_penalties = [avaliar(ind, tarefas_globais, colaboradores) for ind in pop]
     fits = [fit for fit, _ in fits_and_penalties]
     penalties = [penalty for _, penalty in fits_and_penalties]
@@ -253,14 +193,12 @@ def algoritmo_genetico(tam_pop, n_gen, pc, pm, tarefas_globais, colaboradores):
         new_fits = []
         new_penalties = []
 
-        # Elitismo simples
         for i, f in enumerate(fits):
             if f < best_fit:
                 best_fit = f
                 best_sol = pop[i][:]
                 best_penalty = penalties[i]
 
-        # Salva o melhor fitness da geração atual
         historico_fitness.append(best_fit)
 
         while len(new_pop) < tam_pop:
@@ -281,7 +219,6 @@ def algoritmo_genetico(tam_pop, n_gen, pc, pm, tarefas_globais, colaboradores):
             if len(new_pop) < tam_pop:
                 new_pop.append(c2)
 
-        # Avaliação da nova população
         fits_and_penalties = [avaliar(ind, tarefas_globais, colaboradores) for ind in new_pop]
         new_fits = [fit for fit, _ in fits_and_penalties]
         new_penalties = [penalty for _, penalty in fits_and_penalties]
@@ -290,22 +227,15 @@ def algoritmo_genetico(tam_pop, n_gen, pc, pm, tarefas_globais, colaboradores):
         fits = new_fits
         penalties = new_penalties
 
-    # Última checagem após todas as gerações
     for i, f in enumerate(fits):
         if f < best_fit:
             best_fit = f
             best_sol = pop[i][:]
             best_penalty = penalties[i]
 
-    # Adiciona fitness final ao histórico
     historico_fitness.append(best_fit)
 
     return best_sol, best_fit, historico_fitness, best_penalty
-
-
-##############################################################################
-# 4. FULLCALENDAR
-##############################################################################
 
 
 def gerar_fullcalendar_html(eventos, initial_date):
@@ -392,27 +322,13 @@ def gerar_fullcalendar_html(eventos, initial_date):
     """
     return html_code
 
-
-##############################################################################
-# 5. STREAMLIT APP
-##############################################################################
-
 def verificar_conflitos(df_result):
-    """
-    Recebe o DF final (com colab, início e fim em dias) e identifica:
-    1. Conflitos de intervalos para o mesmo colaborador.
-    2. Conflitos de etapas do mesmo projeto sendo executadas ao mesmo tempo.
-
-    Retorna um DataFrame 'df_conflitos' com os detalhes dos conflitos e o motivo.
-    """
-    # Copiar e organizar os dados
     df = df_result.copy()
     df["start_dt"] = df["Início (dias)"]
     df["end_dt"] = df["Fim (dias)"]
 
     conflitos = []
 
-    # Verificar conflitos para o mesmo colaborador
     for colab, group in df.groupby("Colaborador"):
         rows = group.sort_values("start_dt").to_dict("records")
         for i1 in range(len(rows)):
@@ -422,7 +338,6 @@ def verificar_conflitos(df_result):
                 s1, e1 = r1["start_dt"], r1["end_dt"]
                 s2, e2 = r2["start_dt"], r2["end_dt"]
 
-                # Overlap se (s1 < e2) e (s2 < e1)
                 if (s1 < e2) and (s2 < e1):
                     conflitos.append({
                         "Tipo": "Colaborador",
@@ -445,7 +360,6 @@ def verificar_conflitos(df_result):
                 s1, e1 = r1["start_dt"], r1["end_dt"]
                 s2, e2 = r2["start_dt"], r2["end_dt"]
 
-                # Overlap se (s1 < e2) e (s2 < e1)
                 if (s1 < e2) and (s2 < e1):
                     conflitos.append({
                         "Tipo": "Projeto",
@@ -458,23 +372,11 @@ def verificar_conflitos(df_result):
                         "Motivo": "Conflito de etapas sobrepostas no mesmo projeto",
                     })
 
-    # Retorna os conflitos como DataFrame
     df_conflitos = pd.DataFrame(conflitos)
     return df_conflitos
 
 
 def gerar_tabela_html(df, duracao_maxima):
-    """
-    Gera uma tabela HTML completa com uma coluna Gantt.
-
-    Parâmetros:
-    - df: DataFrame com os dados.
-    - duracao_maxima: Duração total máxima para normalizar as barras.
-
-    Retorno:
-    - Uma string contendo o HTML completo da tabela.
-    """
-    # Cabeçalho da tabela
     tabela_html = """
     <style>
         body {
@@ -521,9 +423,8 @@ def gerar_tabela_html(df, duracao_maxima):
         <tbody>
     """
 
-    # Adicionar as linhas da tabela
     for _, row in df.iterrows():
-        # Calcular a posição e largura da barra Gantt
+
         proporcao_inicio = (row["Início (dias)"] / duracao_maxima) * 100
         proporcao_duracao = ((row["Fim (dias)"] - row["Início (dias)"]) / duracao_maxima) * 100
 
@@ -545,7 +446,6 @@ def gerar_tabela_html(df, duracao_maxima):
         </tr>
         """
 
-    # Fechar a tabela
     tabela_html += """
         </tbody>
     </table>
@@ -554,32 +454,35 @@ def gerar_tabela_html(df, duracao_maxima):
 
 
 def main():
-    st.title("Algoritmo Genético para Alocação de Colaboradores")
+    st.title("Algoritmo Genético para alocação de colaboradores")
 
     if "df_result" not in st.session_state:
+        st.info("Execute o algoritmo na barra lateral.")
+
+        st.session_state["table_result"] = None
         st.session_state["df_result"] = None
         st.session_state["melhor_fit"] = None
-        st.session_state["hist_fit"] = None  # evolução da fitness
+        st.session_state["hist_fit"] = None
 
-    st.sidebar.header("Parâmetros do AG")
-    tam_pop = st.sidebar.slider("Tamanho da População", 10, 50, 20)
-    n_gen = st.sidebar.slider("Número de Gerações", 5, 1000, 20)
-    pc = st.sidebar.slider("Prob. Crossover", 0.0, 1.0, 0.7)
-    pm = st.sidebar.slider("Prob. Mutação", 0.0, 1.0, 0.3)
+    st.sidebar.header("Parâmetros")
+    tam_pop = st.sidebar.slider("Tamanho da população", 10, 100, 20)
+    n_gen = st.sidebar.slider("Número de gerações", 5, 1000, 100)
+    pc = st.sidebar.slider("Prob. crossover", 0.0, 1.0, 0.7)
+    pm = st.sidebar.slider("Prob. mutação", 0.0, 1.0, 0.3)
 
     colaboradores, projetos = gerar_dados()
+    project_colors = {proj["nome"]: proj["color"] for proj in projetos}
 
-    if st.sidebar.button("Executar Algoritmo"):
+    if st.sidebar.button("Executar"):
+
         tarefas_globais, colaboradores = montar_tarefas_globais(colaboradores, projetos)
 
-        project_colors = {proj["nome"]: proj["color"] for proj in projetos}
 
         best_ind, best_val, hist_fit, detalhes_penalidades = algoritmo_genetico(
             tam_pop, n_gen, pc, pm, tarefas_globais, colaboradores
         )
 
-        # Montar df_result
-        project_end = {}  # armazena o último "dia" em que cada projeto terminou
+        project_end = {}
 
         rows = []
         for i, tsk in enumerate(tarefas_globais):
@@ -587,19 +490,14 @@ def main():
             colab = next(c for c in colaboradores if c["id"] == cid)
             duracao = tsk["duracao_dias"]
 
-            # Pega o último dia ocupado pelo mesmo colaborador:
             fim_colab = max([r["Fim (dias)"] for r in rows if r["Colaborador"] == colab["nome"]] or [0])
 
-            # Pega o último dia ocupado pelo mesmo projeto:
             fim_proj = project_end.get(tsk["projeto"], 0)
 
-            # Agora sim, o início deve ser depois que o colaborador está livre
-            # E também depois que a etapa anterior do mesmo projeto acabou:
             start = max(fim_colab, fim_proj)
 
             end = start + duracao
 
-            # Atualiza o dicionário de controle do projeto
             project_end[tsk["projeto"]] = end
 
             rows.append({
@@ -613,7 +511,6 @@ def main():
 
         df_res = pd.DataFrame(rows)
 
-        # Adicionar a tabela Gantt como HTML
         duracao_maxima = df_res["Fim (dias)"].max()
         tabela_html = gerar_tabela_html(df_res, duracao_maxima)
 
@@ -623,43 +520,59 @@ def main():
         st.session_state["hist_fit"] = hist_fit
         st.session_state["detalhes_penalidades"] = detalhes_penalidades
 
-    tab_result, tab_calendar, tab_gantt = st.tabs(["Resultados do Algoritmo", "Calendário & Filtros", "Gantt"])
+    df_result = st.session_state["df_result"]
 
-    with tab_result:
-        if st.session_state["df_result"] is None:
-            st.info("Rode o Algoritmo na barra lateral.")
-        else:
+    if df_result is not None:
+
+        tab_result, tab_calendar, tab_gantt = st.tabs(["Resultados do Algoritmo", "Calendário & Filtros", "Gantt"])
+
+        with tab_result:
+
             st.subheader("Resultados Gerais")
-            st.write(f"**Melhor Fitness**: {st.session_state['melhor_fit']}")
             st.table(st.session_state["df_result"])
 
-        if st.session_state["hist_fit"]:
-            st.subheader("Evolução da Fitness")
-            df_fit = pd.DataFrame({
-                "Geração": range(1, len(st.session_state["hist_fit"]) + 1),
-                "Fitness": st.session_state["hist_fit"]
-            })
-            st.line_chart(df_fit, x="Geração", y="Fitness")
+            if st.session_state["hist_fit"]:
+                st.subheader("Evolução da Fitness")
+                df_fit = pd.DataFrame({
+                    "Geração": range(1, len(st.session_state["hist_fit"]) + 1),
+                    "Fitness": st.session_state["hist_fit"]
+                })
 
-        if "melhor_fit" in st.session_state:
-            st.write('Melhor Fitness: ')
-            st.write(st.session_state["melhor_fit"])
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=df_fit["Geração"],
+                    y=df_fit["Fitness"],
+                    mode='lines',
+                    name='Fitness',
+                    hovertemplate="<b>Geração</b>: %{x}<br><b>Fitness</b>: %{y}<extra></extra>"
+                    )
+                )
+                fig.update_layout(
+                    xaxis_title="Gerações",
+                    yaxis_title="Fitness",
+                    hoverlabel=dict(
+                        bgcolor="white",
+                        font_size=12,
+                        font_family="Arial"
+                    )
+                )
+                st.plotly_chart(fig, use_container_width=True)
 
-        # Verificar conflitos
-        if "df_result" in st.session_state and st.session_state["df_result"] is not None:
-            st.subheader("Conflitos de Alocação")
-            df_conf = verificar_conflitos(st.session_state["df_result"])
-            if df_conf.empty:
-                st.success("Nenhum conflito encontrado! :)")
-            else:
-                st.warning("Há conflitos de alocação! Veja abaixo:")
-                st.table(df_conf)
+            if "melhor_fit" in st.session_state:
+                st.write(f"**Melhor Fitness**: {st.session_state['melhor_fit']}")
 
-    with tab_calendar:
-        df_result = st.session_state["df_result"]
-        if df_result is None:
-            st.info("Rode o Algoritmo.")
-        else:
+            # Verificar conflitos
+            if "df_result" in st.session_state and st.session_state["df_result"] is not None:
+                st.subheader("Conflitos de alocação")
+                df_conf = verificar_conflitos(st.session_state["df_result"])
+                if df_conf.empty:
+                    st.success("Nenhum conflito encontrado! :)")
+                else:
+                    st.warning("Há conflitos de alocação!")
+                    st.table(df_conf)
+
+        with tab_calendar:
+
             st.subheader("Filtros")
             projetos_unicos = sorted(df_result["Projeto"].unique())
             colabs_unicos = sorted(df_result["Colaborador"].unique())
@@ -699,15 +612,15 @@ def main():
                 cal_html = gerar_fullcalendar_html(eventos, datetime.date.today().strftime("%Y-%m-%d"))
                 components.html(cal_html, height=700, scrolling=True)
 
-        st.subheader("Detalhamento das Penalidades")
+            st.subheader("Detalhamento das Penalidades")
 
-        if "detalhes_penalidades" in st.session_state:
+            if "detalhes_penalidades" in st.session_state:
 
-            for motivo, valor in st.session_state["detalhes_penalidades"].items():
-                st.write(f"**{motivo.replace('_', ' ').capitalize()}:** {valor}")
-    with tab_gantt:
-        components.html(st.session_state["table_result"], height=2600, scrolling=True)
+                for motivo, valor in st.session_state["detalhes_penalidades"].items():
+                    st.write(f"**{motivo.replace('_', ' ').capitalize()}:** {valor}")
 
+        with tab_gantt:
+            components.html(st.session_state["table_result"], height=2600, scrolling=True)
 
 if __name__ == "__main__":
     main()
