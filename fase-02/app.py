@@ -7,6 +7,12 @@ import streamlit as st
 import streamlit.components.v1 as components
 import plotly.graph_objects as go
 
+st.set_page_config(
+    page_title="Algoritmo Genético para alocação de colaboradores",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 
 class Utils:
     """
@@ -67,6 +73,15 @@ class DataManager:
         """
         colaboradores = self.read_json_from_file("dados/colaboradores.json")
         projetos = self.read_json_from_file("dados/projetos.json")
+
+        # Converte as datas de ausência de cada colaborador para dias (inteiros)
+        for colab in colaboradores:
+            ausencias_convertidas = []
+            for data_str in colab["ausencias"]:
+                dia_int = Utils.date_to_int(data_str, st.session_state.ref_date)
+                ausencias_convertidas.append(dia_int)
+            colab["ausencias"] = ausencias_convertidas
+
         return colaboradores, projetos
 
     def montar_tarefas_globais(self, colaboradores: list, projetos: list):
@@ -565,10 +580,10 @@ class Visualization:
                 <tr>
                     <th style="width: 150px;">Projeto</th>
                     <th>Nome Tarefa</th>
-                    <th>Início (dias)</th>
-                    <th>Fim (dias)</th>
+                    <th>Data Início</th>
+                    <th>Data Fim</th>
                     <th>Colaborador</th>
-                    <th>Dias</th>
+                    <th>Duração (dias)</th>
                     <th style="width: 150px;">Gantt</th>
                 </tr>
             </thead>
@@ -591,8 +606,8 @@ class Visualization:
             <tr>
                 <td>{row['Projeto']}</td>
                 <td>{row['Nome Tarefa']}</td>
-                <td>{row['Início (dias)']}</td>
-                <td>{row['Fim (dias)']}</td>
+                <td>{row['Data Início']}</td>
+                <td>{row['Data Fim']}</td>
                 <td>{row['Colaborador']}</td>
                 <td>{row['Duração (dias)']}</td>
                 <td>{gantt_html}</td>
@@ -641,6 +656,7 @@ class App:
         n_gen = st.sidebar.slider("Número de gerações", 5, 1000, 100)
         pc = st.sidebar.slider("Prob. crossover", 0.0, 1.0, 0.7)
         pm = st.sidebar.slider("Prob. mutação", 0.0, 1.0, 0.3)
+        st.sidebar.date_input("Data de referência", datetime.date(2025, 1, 1), key="ref_date")
 
         # Gera dados
         colaboradores, projetos = self.data_manager.gerar_dados()
@@ -670,16 +686,26 @@ class App:
                     or [0]
                 )
                 fim_proj = project_end.get(tsk["projeto"], 0)
+
                 start = max(fim_colab, fim_proj)
                 end = start + duracao
 
                 project_end[tsk["projeto"]] = end
 
+                start_date = (
+                    st.session_state.ref_date + datetime.timedelta(days=start)
+                ).strftime("%d/%m/%Y")
+                end_date = (
+                    st.session_state.ref_date + datetime.timedelta(days=end)
+                ).strftime("%d/%m/%Y")
+
                 rows.append({
                     "Projeto": tsk["projeto"],
                     "Nome Tarefa": tsk["nome"],
                     "Início (dias)": start,
+                    "Data Início": start_date,
                     "Fim (dias)": end,
+                    "Data Fim": end_date,
                     "Colaborador": colab["nome"],
                     "Duração (dias)": duracao,
                 })
@@ -701,16 +727,30 @@ class App:
 
         # Exibe resultados
         if df_result is not None:
-            tab_result, tab_calendar, tab_gantt = st.tabs(
-                ["Resultados do Algoritmo", "Calendário & Filtros", "Gantt"]
+            tab_fitness, tab_conflicts, tab_gant, tab_calendar = st.tabs(
+                ["Fitness", "Conflitos", "Gant", "Calendário"]
             )
 
-            with tab_result:
-                st.subheader("Resultados Gerais")
-                st.table(df_result)
+            with tab_gant:
+                components.html(st.session_state["table_result"], height=600, scrolling=True)
 
+            with tab_conflicts:
+                st.subheader("Conflitos de Alocação")
+                df_conf = self.vis.verificar_conflitos(df_result)
+                if df_conf.empty:
+                    st.success("Nenhum conflito encontrado! :)")
+                else:
+                    st.warning("Há conflitos de alocação!")
+                    st.table(df_conf)
+
+                st.subheader("Detalhamento das Penalidades")
+                if "detalhes_penalidades" in st.session_state:
+                    df_penality = pd.DataFrame(st.session_state["detalhes_penalidades"].items(), columns=["Motivo", "Valor"])
+                    st.dataframe(df_penality, hide_index=True)
+
+            with tab_fitness:
+                st.subheader("Evolução da Fitness")
                 if st.session_state["hist_fit"]:
-                    st.subheader("Evolução da Fitness")
                     df_fit = pd.DataFrame({
                         "Geração": range(1, len(st.session_state["hist_fit"]) + 1),
                         "Fitness": st.session_state["hist_fit"]
@@ -743,14 +783,6 @@ class App:
                 if "melhor_fit" in st.session_state:
                     st.write(f"**Melhor Fitness**: {st.session_state['melhor_fit']}")
 
-                # Verificar conflitos
-                st.subheader("Conflitos de alocação")
-                df_conf = self.vis.verificar_conflitos(df_result)
-                if df_conf.empty:
-                    st.success("Nenhum conflito encontrado! :)")
-                else:
-                    st.warning("Há conflitos de alocação!")
-                    st.table(df_conf)
 
             with tab_calendar:
                 st.subheader("Filtros")
@@ -778,45 +810,33 @@ class App:
                         ini_dias = row["Início (dias)"]
                         fim_dias = row["Fim (dias)"]
 
+                        start_date = (
+                            st.session_state.ref_date + datetime.timedelta(days=ini_dias)
+                        ).strftime("%Y-%m-%d")
+                        end_date = (
+                            st.session_state.ref_date + datetime.timedelta(days=fim_dias)
+                        ).strftime("%Y-%m-%d")
+
                         eventos.append({
                             "title": f"{row['Nome Tarefa']} - {row['Colaborador']}",
-                            "start": (
-                                datetime.date.today() +
-                                datetime.timedelta(days=ini_dias)
-                            ).strftime("%Y-%m-%d"),
-                            "end": (
-                                datetime.date.today() +
-                                datetime.timedelta(days=fim_dias)
-                            ).strftime("%Y-%m-%d"),
+                            "start": start_date,
+                            "end": end_date,
                             "color": project_colors.get(row["Projeto"], "#999999"),
                             "extendedProps": {
                                 "projeto": row["Projeto"],
                                 "tarefa": row["Nome Tarefa"],
                                 "colaborador": row["Colaborador"],
                                 "duracao": row["Duração (dias)"],
-                                "dataInicio": (
-                                    datetime.date.today() +
-                                    datetime.timedelta(days=ini_dias)
-                                ).strftime("%Y-%m-%d"),
-                                "dataFim": (
-                                    datetime.date.today() +
-                                    datetime.timedelta(days=fim_dias)
-                                ).strftime("%Y-%m-%d")
+                                "dataInicio": start_date,
+                                "dataFim": end_date
                             }
                         })
 
                     cal_html = self.vis.gerar_fullcalendar_html(
-                        eventos, datetime.date.today().strftime("%Y-%m-%d")
+                        eventos, st.session_state.ref_date.strftime("%Y-%m-%d")
                     )
                     components.html(cal_html, height=700, scrolling=True)
 
-                st.subheader("Detalhamento das Penalidades")
-                if "detalhes_penalidades" in st.session_state:
-                    for motivo, valor in st.session_state["detalhes_penalidades"].items():
-                        st.write(f"**{motivo.replace('_', ' ').capitalize()}:** {valor}")
-
-            with tab_gantt:
-                components.html(st.session_state["table_result"], height=2600, scrolling=True)
 
 if __name__ == "__main__":
     app = App()
