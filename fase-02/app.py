@@ -18,6 +18,7 @@ class Utils:
     """
     Classe utilitária para conversão de datas.
     """
+
     @staticmethod
     def date_to_int(date_str: str, ref_date: datetime.date) -> int:
         """
@@ -140,10 +141,10 @@ class GeneticAlgorithm:
 
     @staticmethod
     def avaliar(
-        individuo: list,
-        tarefas_globais: list,
-        colaboradores: list,
-        peso_makespan: int = 500
+            individuo: list,
+            tarefas_globais: list,
+            colaboradores: list,
+            peso_makespan: int = 200
     ) -> tuple:
         """
         Avalia a aptidão (fitness) de um indivíduo, aplicando penalidades por incompatibilidades,
@@ -188,9 +189,17 @@ class GeneticAlgorithm:
             ultimo_fim_colab = max(e for (_, e) in alocacoes[cid]) if alocacoes[cid] else 0
 
             inicio_tarefa = max(ultimo_fim_proj, ultimo_fim_colab)
-            fim_tarefa = inicio_tarefa + tarefa["duracao_dias"]
 
-            # Penalidade por ausências
+            while inicio_tarefa in colab["ausencias"]:
+                inicio_tarefa += 1
+
+            fim_tarefa = inicio_tarefa
+            duracao_restante = tarefa["duracao_dias"]
+            while duracao_restante > 0:
+                if fim_tarefa not in colab["ausencias"]:
+                    duracao_restante -= 1
+                fim_tarefa += 1
+
             for dia in range(inicio_tarefa, fim_tarefa):
                 if dia in colab["ausencias"]:
                     penalidades["ausencias"] += 500
@@ -280,13 +289,13 @@ class GeneticAlgorithm:
         return individuo
 
     def algoritmo_genetico(
-        self,
-        tam_pop: int,
-        n_gen: int,
-        pc: float,
-        pm: float,
-        tarefas_globais: list,
-        colaboradores: list
+            self,
+            tam_pop: int,
+            n_gen: int,
+            pc: float,
+            pm: float,
+            tarefas_globais: list,
+            colaboradores: list
     ) -> tuple:
         """
         Executa o loop principal do Algoritmo Genético, gerando e evoluindo a população
@@ -593,8 +602,8 @@ class Visualization:
         for _, row in df.iterrows():
             proporcao_inicio = (row["Início (dias)"] / duracao_maxima) * 100
             proporcao_duracao = (
-                (row["Fim (dias)"] - row["Início (dias)"]) / duracao_maxima
-            ) * 100
+                                        (row["Fim (dias)"] - row["Início (dias)"]) / duracao_maxima
+                                ) * 100
 
             gantt_html = f"""
             <div class="gantt">
@@ -682,29 +691,42 @@ class App:
                 duracao = tsk["duracao_dias"]
 
                 fim_colab = max(
-                    [r["Fim (dias)"] for r in rows if r["Colaborador"] == colab["nome"]]
-                    or [0]
+                    [r["Fim (dias)"] + 1 for r in rows if r["Colaborador"] == colab["nome"]] or [0]
                 )
                 fim_proj = project_end.get(tsk["projeto"], 0)
 
                 start = max(fim_colab, fim_proj)
-                end = start + duracao
+                while start in colab["ausencias"] or (
+                        st.session_state.ref_date + datetime.timedelta(days=start)
+                ).weekday() >= 5:
+                    start += 1
+
+                end = start
+                duracao_restante = duracao
+                while duracao_restante > 0:
+
+                    if end not in colab["ausencias"] and (
+                            st.session_state.ref_date + datetime.timedelta(days=end)
+                    ).weekday() < 5:
+                        duracao_restante -= 1
+                    end += 1
 
                 project_end[tsk["projeto"]] = end
 
                 start_date = (
-                    st.session_state.ref_date + datetime.timedelta(days=start)
+                        st.session_state.ref_date + datetime.timedelta(days=start)
                 ).strftime("%d/%m/%Y")
                 end_date = (
-                    st.session_state.ref_date + datetime.timedelta(days=end)
+                        st.session_state.ref_date + datetime.timedelta(days=end - 1)  # -1 para incluir o último dia
                 ).strftime("%d/%m/%Y")
 
+                # Adicionar ao cronograma
                 rows.append({
                     "Projeto": tsk["projeto"],
                     "Nome Tarefa": tsk["nome"],
                     "Início (dias)": start,
                     "Data Início": start_date,
-                    "Fim (dias)": end,
+                    "Fim (dias)": end - 1,  # -1 para refletir o último dia de trabalho
                     "Data Fim": end_date,
                     "Colaborador": colab["nome"],
                     "Duração (dias)": duracao,
@@ -745,7 +767,8 @@ class App:
 
                 st.subheader("Detalhamento das Penalidades")
                 if "detalhes_penalidades" in st.session_state:
-                    df_penality = pd.DataFrame(st.session_state["detalhes_penalidades"].items(), columns=["Motivo", "Valor"])
+                    df_penality = pd.DataFrame(st.session_state["detalhes_penalidades"].items(),
+                                               columns=["Motivo", "Valor"])
                     st.dataframe(df_penality, hide_index=True)
 
             with tab_fitness:
@@ -783,7 +806,6 @@ class App:
                 if "melhor_fit" in st.session_state:
                     st.write(f"**Melhor Fitness**: {st.session_state['melhor_fit']}")
 
-
             with tab_calendar:
                 st.subheader("Filtros")
                 projetos_unicos = sorted(df_result["Projeto"].unique())
@@ -799,7 +821,7 @@ class App:
                 df_result_filtered = df_result[
                     (df_result["Projeto"].isin(filtro_proj)) &
                     (df_result["Colaborador"].isin(filtro_colab))
-                ]
+                    ]
 
                 st.subheader("Calendário de Alocação (Filtrado)")
                 if df_result_filtered.empty:
@@ -811,26 +833,37 @@ class App:
                         fim_dias = row["Fim (dias)"]
 
                         start_date = (
-                            st.session_state.ref_date + datetime.timedelta(days=ini_dias)
+                                st.session_state.ref_date + datetime.timedelta(days=ini_dias)
                         ).strftime("%Y-%m-%d")
                         end_date = (
-                            st.session_state.ref_date + datetime.timedelta(days=fim_dias)
+                                st.session_state.ref_date + datetime.timedelta(days=fim_dias + 1)
                         ).strftime("%Y-%m-%d")
 
-                        eventos.append({
-                            "title": f"{row['Nome Tarefa']} - {row['Colaborador']}",
-                            "start": start_date,
-                            "end": end_date,
-                            "color": project_colors.get(row["Projeto"], "#999999"),
-                            "extendedProps": {
-                                "projeto": row["Projeto"],
-                                "tarefa": row["Nome Tarefa"],
-                                "colaborador": row["Colaborador"],
-                                "duracao": row["Duração (dias)"],
-                                "dataInicio": start_date,
-                                "dataFim": end_date
-                            }
-                        })
+                        eventos = []
+                        for _, row in df_result_filtered.iterrows():
+                            ini_date = datetime.datetime.strptime(row["Data Início"], "%d/%m/%Y")
+                            fim_date = datetime.datetime.strptime(row["Data Fim"], "%d/%m/%Y")
+
+                            current_date = ini_date
+                            while current_date <= fim_date:
+                                if current_date.weekday() < 5:  # 0=Segunda, ..., 4=Sexta
+                                    start = current_date.strftime("%Y-%m-%d")
+                                    end = (current_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+                                    eventos.append({
+                                        "title": f"{row['Nome Tarefa']} - {row['Colaborador']}",
+                                        "start": start,
+                                        "end": end,
+                                        "color": project_colors.get(row["Projeto"], "#999999"),
+                                        "extendedProps": {
+                                            "projeto": row["Projeto"],
+                                            "tarefa": row["Nome Tarefa"],
+                                            "colaborador": row["Colaborador"],
+                                            "duracao": row["Duração (dias)"],
+                                            "dataInicio": start,
+                                            "dataFim": end
+                                        }
+                                    })
+                                current_date += datetime.timedelta(days=1)
 
                     cal_html = self.vis.gerar_fullcalendar_html(
                         eventos, st.session_state.ref_date.strftime("%Y-%m-%d")
