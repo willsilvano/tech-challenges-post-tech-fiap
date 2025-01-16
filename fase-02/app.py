@@ -400,84 +400,130 @@ class Visualization:
         :param initial_date: Data inicial a ser exibida no calendário.
         :return: String HTML que renderiza o calendário.
         """
-        import json
         ev_str = json.dumps(eventos)
 
-        css_dark = """
+        css_custom = """
         body {
-          color: #FFF !important;
-          background-color: #1E1E1E;
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            color: #333;
         }
-        .fc-daygrid-day-frame,
-        .fc-event-title,
-        .fc-daygrid-event-dot {
-          color: #FFF !important;
+        .fc {
+            border: 1px solid #ddd;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .fc .fc-scrollgrid {
-          border-color: #666 !important;
+        .fc-toolbar-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #444;
         }
-        .fc .fc-daygrid-day-bg {
-          background-color: #2A2A2A;
+        .fc-button {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .fc-button:hover {
+            background-color: #003d82;
+        }
+        .fc-event {
+            font-size: 12px;
+            border-radius: 4px;
+            padding: 2px 5px;
+            font-weight: bold;
+        }
+        .fc-daygrid-day-number {
+            color: #555;
+        }
+        .fc-event-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .fc-tooltip {
-          position: absolute;
-          z-index: 9999;
-          background: rgba(0,0,0,0.9);
-          color: #fff;
-          padding: 5px 10px;
-          border-radius: 3px;
-          font-size: 0.85em;
-          pointer-events: none;
-          transition: opacity 0.1s ease;
+            position: absolute;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            pointer-events: none;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
         }
         """
 
         html_code = f"""
         <html>
         <head>
-          <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.7/index.global.min.css' rel='stylesheet' />
-          <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.7/index.global.min.js'></script>
-          <style>{css_dark}</style>
+            <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.7/index.global.min.css' rel='stylesheet' />
+            <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.7/index.global.min.js'></script>
+            <style>{css_custom}</style>
         </head>
         <body>
-          <div id='calendar'></div>
-          <script>
-            var toolTipEl;
-            document.addEventListener('DOMContentLoaded', function() {{
-              var calendarEl = document.getElementById('calendar');
-              var calendar = new FullCalendar.Calendar(calendarEl, {{
-                initialView: 'dayGridMonth',
-                initialDate: '{initial_date}',
-                locale: 'pt-br',
-                events: {ev_str},
-                eventMouseEnter: function(info) {{
-                  var props = info.event.extendedProps;
-                  var ttHtml = ''
-                    + '<b>Projeto:</b> ' + props.projeto + '<br>'
-                    + '<b>Tarefa:</b> ' + props.tarefa + '<br>'
-                    + '<b>Colab:</b> ' + props.colaborador + '<br>'
-                    + '<b>Início:</b> ' + props.dataInicio + '<br>'
-                    + '<b>Término:</b> ' + props.dataFim + '<br>'
-                    + '<b>Duração:</b> ' + props.duracao + ' dias';
-                  toolTipEl = document.createElement('div');
-                  toolTipEl.className = 'fc-tooltip';
-                  toolTipEl.innerHTML = ttHtml;
-                  document.body.appendChild(toolTipEl);
-                  var rect = info.el.getBoundingClientRect();
-                  toolTipEl.style.top = rect.top + window.scrollY + 'px';
-                  toolTipEl.style.left = rect.left + 'px';
-                }},
-                eventMouseLeave: function(info) {{
-                  if(toolTipEl) {{
-                    document.body.removeChild(toolTipEl);
-                    toolTipEl = null;
-                  }}
-                }},
-                editable: false
-              }});
-              calendar.render();
-            }});
-          </script>
+            <div id='calendar'></div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {{
+                    var calendarEl = document.getElementById('calendar');
+                    var tooltip;  // Tooltip global
+                    var calendar = new FullCalendar.Calendar(calendarEl, {{
+                        initialView: 'dayGridMonth',
+                        initialDate: '{initial_date}',
+                        locale: 'pt-br',
+                        headerToolbar: {{
+                            left: 'prev,next today',
+                            center: 'title',
+                            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                        }},
+                        buttonText: {{
+                            today: 'Hoje',
+                            month: 'Mês',
+                            week: 'Semana',
+                            day: 'Dia'
+                        }},
+                        events: {ev_str},
+                        eventMouseEnter: function(info) {{
+                            var props = info.event.extendedProps;
+                            tooltip = document.createElement('div');
+                            tooltip.className = 'fc-tooltip';
+                            tooltip.style.position = 'absolute';
+                            tooltip.style.background = 'rgba(0,0,0,0.8)';
+                            tooltip.style.color = 'white';
+                            tooltip.style.padding = '10px';
+                            tooltip.style.borderRadius = '5px';
+                            tooltip.style.fontSize = '12px';
+                            tooltip.style.pointerEvents = 'none';
+                            tooltip.innerHTML = `
+                                <b>Projeto:</b> ${{props.projeto}}<br>
+                                <b>Tarefa:</b> ${{props.tarefa}}<br>
+                                <b>Colaborador:</b> ${{props.colaborador}}<br>
+                                <b>Início:</b> ${{props.dataInicio}}<br>
+                                <b>Término:</b> ${{props.dataFim}}<br>
+                                <b>Duração:</b> ${{props.duracao}} dias
+                            `;
+                            document.body.appendChild(tooltip);
+                            var rect = info.el.getBoundingClientRect();
+                            tooltip.style.top = rect.top + window.scrollY + 10 + 'px';
+                            tooltip.style.left = rect.left + 'px';
+                        }},
+                        eventMouseLeave: function(info) {{
+                            if (tooltip) {{
+                                tooltip.remove();  // Remove o tooltip do DOM
+                                tooltip = null;
+                            }}
+                        }},
+                        editable: false,
+                        height: "auto",
+                        weekends: false  // Oculta os finais de semana no calendário
+                    }});
+                    calendar.render();
+                }});
+            </script>
         </body>
         </html>
         """
@@ -858,7 +904,7 @@ class App:
                     cal_html = self.vis.gerar_fullcalendar_html(
                         eventos, st.session_state.ref_date.strftime("%Y-%m-%d")
                     )
-                    components.html(cal_html, height=700, scrolling=True)
+                    components.html(cal_html, height=1000, scrolling=True)
 
 
 if __name__ == "__main__":
