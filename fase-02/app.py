@@ -839,31 +839,21 @@ class App:
                                 st.session_state.ref_date + datetime.timedelta(days=fim_dias + 1)
                         ).strftime("%Y-%m-%d")
 
-                        eventos = []
-                        for _, row in df_result_filtered.iterrows():
-                            ini_date = datetime.datetime.strptime(row["Data Início"], "%d/%m/%Y")
-                            fim_date = datetime.datetime.strptime(row["Data Fim"], "%d/%m/%Y")
-
-                            current_date = ini_date
-                            while current_date <= fim_date:
-                                if current_date.weekday() < 5:  # 0=Segunda, ..., 4=Sexta
-                                    start = current_date.strftime("%Y-%m-%d")
-                                    end = (current_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-                                    eventos.append({
-                                        "title": f"{row['Nome Tarefa']} - {row['Colaborador']}",
-                                        "start": start,
-                                        "end": end,
-                                        "color": project_colors.get(row["Projeto"], "#999999"),
-                                        "extendedProps": {
-                                            "projeto": row["Projeto"],
-                                            "tarefa": row["Nome Tarefa"],
-                                            "colaborador": row["Colaborador"],
-                                            "duracao": row["Duração (dias)"],
-                                            "dataInicio": start,
-                                            "dataFim": end
-                                        }
-                                    })
-                                current_date += datetime.timedelta(days=1)
+                        # # Adicionar ao calendário
+                        eventos.append({
+                            "title": f"{row['Nome Tarefa']} - {row['Colaborador']}",
+                            "start": start_date,
+                            "end": end_date,
+                            "color": project_colors.get(row["Projeto"], "#999999"),
+                            "extendedProps": {
+                                "projeto": row["Projeto"],
+                                "tarefa": row["Nome Tarefa"],
+                                "colaborador": row["Colaborador"],
+                                "duracao": row["Duração (dias)"],
+                                "dataInicio": row["Data Início"],
+                                "dataFim": row["Data Fim"]
+                            }
+                        })
 
                     cal_html = self.vis.gerar_fullcalendar_html(
                         eventos, st.session_state.ref_date.strftime("%Y-%m-%d")
