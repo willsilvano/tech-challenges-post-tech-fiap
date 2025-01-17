@@ -638,6 +638,7 @@ class Visualization:
                     <th>Data Início</th>
                     <th>Data Fim</th>
                     <th>Colaborador</th>
+                    <th>Trabalho (dias)</th>
                     <th>Duração (dias)</th>
                     <th style="width: 150px;">Gantt</th>
                 </tr>
@@ -650,6 +651,11 @@ class Visualization:
             proporcao_duracao = (
                                         (row["Fim (dias)"] - row["Início (dias)"]) / duracao_maxima
                                 ) * 100
+
+            # Calculando a duração como diferença entre Data Início e Data Fim
+            data_inicio = pd.to_datetime(row["Data Início"], format="%d/%m/%Y")
+            data_fim = pd.to_datetime(row["Data Fim"], format="%d/%m/%Y")
+            duracao_dias = (data_fim - data_inicio).days + 1  # +1 para incluir o último dia
 
             gantt_html = f"""
             <div class="gantt">
@@ -664,7 +670,8 @@ class Visualization:
                 <td>{row['Data Início']}</td>
                 <td>{row['Data Fim']}</td>
                 <td>{row['Colaborador']}</td>
-                <td>{row['Duração (dias)']}</td>
+                <td>{row['Duração (dias)']}</td>  <!-- Renomeado para Trabalho -->
+                <td>{duracao_dias}</td>  <!-- Nova coluna Duração -->
                 <td>{gantt_html}</td>
             </tr>
             """
