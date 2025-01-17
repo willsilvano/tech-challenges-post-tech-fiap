@@ -28,7 +28,7 @@ Como solução, desenvolveu-se um Algoritmo Genético que otimiza a distribuiç�
 
 ### Comparação com Métodos Convencionais
 
-* Comparou-se a alocação manual com a gerada pelo software.
+* Nós comparamos o processo de alocação manual com a gerada pelo software, e percebeu-se que o gerado pelo algoritmo além de ser mais rápido foi bem mais preciso.
 
 ### Validação de Restrições
 
@@ -72,6 +72,28 @@ evitam sobreposições de tarefas para cada colaborador.
   * **Verificação de Conflitos**: Detecta sobreposições de tarefas dentro do mesmo projeto ou para o mesmo colaborador.
 
 * **Aplicação Web (Streamlit)**: Os parâmetros do GA são ajustados em tempo real pelo usuário na barra lateral (tamanho da população, número de gerações, probabilidade de crossover e mutação). Ao final de cada execução, a aplicação exibe os resultados em diferentes abas (tabela, calendário, Gantt e evolução da fitness).
+
+### Prints das telas
+
+Na aba "Dados" são exibidos os dados dos projetos e colaboradores.
+
+![Imagem](dados.png)
+
+Na aba "Fitness" é exibido o gráfico de evolução da fitness ao longo das gerações.
+
+![Imagem](fitness.png)
+
+Na aba "Conflitos" são exibidos os conflitos de alocação.
+
+![Imagem](conflitos.png)
+
+Na aba "Gantt" é exibido o gráfico de Gantt com as alocações geradas pelo algoritmo.
+
+![Imagem](gantt.png)
+
+Na aba "Calendário" é exibido o calendário interativo com as tarefas alocadas com a possibilidade de visualizar as tarefas por dia, semana ou mês. Nessa aba ainda é possível aplicar filtros para visualizar apenas tarefas de um projeto  ou colaborador específico.
+
+![Imagem](calendario.png)
 
 ### Funcionamento Detalhado do Algoritmo Genético
 
