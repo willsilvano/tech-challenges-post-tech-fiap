@@ -795,9 +795,42 @@ class App:
 
         # Exibe resultados
         if df_result is not None:
-            tab_fitness, tab_conflicts, tab_gant, tab_calendar = st.tabs(
-                ["Fitness", "Conflitos", "Gant", "Calendário"]
+            tab_data, tab_fitness, tab_conflicts, tab_gant, tab_calendar = st.tabs(
+                ["Dados", "Fitness", "Conflitos", "Gant", "Calendário"]
             )
+
+            with tab_data:
+                st.subheader("Projetos")
+
+                for proj in projetos:
+                    st.markdown(f"**{proj['nome']}**")
+                    # formata colunas etapas
+                    df_etapas = []
+                    for etapa in proj["etapas"]:
+                        df_etapas.append({
+                            "ID": etapa["id"],
+                            "Nome": etapa["nome"],
+                            "Duração (dias)": etapa["duracao_dias"],
+                            "Habilidades": ", ".join(etapa["habilidades_necessarias"]),
+                            "Cargo": etapa["cargo_necessario"]
+                        })
+                    st.table(pd.DataFrame(df_etapas))
+                    st.divider()
+
+                st.subheader("Colaboradores")
+                df_colaboradores = []
+                for colab in colaboradores:
+                    df_colaboradores.append({
+                        "ID": colab["id"],
+                        "Nome": colab["nome"],
+                        "Habilidades": ", ".join(colab["habilidades"]),
+                        "Cargo": colab["cargo"],
+                        "Ausências": ", ".join(
+                            (st.session_state.ref_date + datetime.timedelta(days=d)).strftime("%d/%m/%Y")
+                            for d in colab["ausencias"]
+                        )
+                    })
+                st.table(pd.DataFrame(df_colaboradores))
 
             with tab_gant:
                 components.html(st.session_state["table_result"], height=600, scrolling=True)
