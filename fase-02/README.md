@@ -32,6 +32,51 @@ Você pode escolher problemas como otimização de rotas, alocação de recursos
 
 **Um vídeo explicativo do projeto**, demonstrando a aplicação prática do algoritmo e discutindo os resultados obtidos.
 
----
+## Como rodar o projeto
+
+A seguir estão as instruções para configurar e executar o projeto em sua máquina local.
+
+### Pré-requisitos
+
+- Python 3.12 ou superior
+- UV
+
+### Configuração
+
+1. Clone o repositório:
+
+   ```bash
+   git clone https://github.com/willsilvano/tech-challenges-post-tech-fiap.git
+   cd tech-challenges-post-tech-fiap.git
+   ```
+
+2. Instale o UV, que é um gerenciador de dependências para Python. Para instalar, consulte a documentação oficial [aqui](https://docs.astral.sh/uv/).
+
+3. Instale as dependências do projeto:
+
+   ```bash
+   uv sync
+   ```
+
+4. Ative o ambiente virtual:
+
+   ```bash
+   source .venv/bin/activate
+   ```
+
+### Execução da aplicação
+
+Para executar a aplicação Streamlit e visualizar o algoritmo genético em ação, utilize o seguinte comando:
+
+```bash
+cd fase-02
+streamlit run app.py
+```
+
+Uma vez que o servidor estiver em execução, abra seu navegador e navegue até a URL fornecida (geralmente `http://localhost:8501`).
+
+Você verá a interface do Streamlit com o aplicativo em execução.
+
+### Documentação
 
 O documento final do projeto está em [Documento.md](docs/Documento.md).
