@@ -665,8 +665,8 @@ class Visualization:
                 <td>{row['Data Início']}</td>
                 <td>{row['Data Fim']}</td>
                 <td>{row['Colaborador']}</td>
-                <td>{row['Duração (dias)']}</td>  <!-- Renomeado para Trabalho -->
-                <td>{duracao_dias}</td>  <!-- Nova coluna Duração -->
+                <td>{row['Duração (dias)']}</td>
+                <td>{duracao_dias}</td>
                 <td>{gantt_html}</td>
             </tr>
             """
