@@ -8,27 +8,27 @@
         "nome": "Análise",
         "duracao_dias": 5,
         "habilidades_necessarias": [
-          "analise"
+          "Análise"
         ],
-        "cargo_necessario": "analista"
+        "cargo_necessario": "Analista de Sistemas"
       },
       {
         "id": 2,
         "nome": "Desenvolvimento",
         "duracao_dias": 8,
         "habilidades_necessarias": [
-          "python"
+          "Python"
         ],
-        "cargo_necessario": "desenvolvedor frontend"
+        "cargo_necessario": "Dev Frontend"
       },
       {
         "id": 3,
         "nome": "Auditoria",
         "duracao_dias": 3,
         "habilidades_necessarias": [
-          "auditoria"
+          "Auditoria"
         ],
-        "cargo_necessario": "qa"
+        "cargo_necessario": "QA"
       }
     ]
   },
@@ -41,27 +41,27 @@
         "nome": "Análise",
         "duracao_dias": 6,
         "habilidades_necessarias": [
-          "analise"
+          "Análise"
         ],
-        "cargo_necessario": "analista"
+        "cargo_necessario": "Analista de Sistemas"
       },
       {
         "id": 2,
         "nome": "Desenvolvimento",
         "duracao_dias": 10,
         "habilidades_necessarias": [
-          "java"
+          "Java"
         ],
-        "cargo_necessario": "desenvolvedor backend"
+        "cargo_necessario": "Dev Backend"
       },
       {
         "id": 3,
         "nome": "Auditoria",
         "duracao_dias": 4,
         "habilidades_necessarias": [
-          "auditoria"
+          "Auditoria"
         ],
-        "cargo_necessario": "qa"
+        "cargo_necessario": "QA"
       }
     ]
   },
@@ -74,27 +74,27 @@
         "nome": "Análise",
         "duracao_dias": 4,
         "habilidades_necessarias": [
-          "analise"
+          "Análise"
         ],
-        "cargo_necessario": "analista"
+        "cargo_necessario": "Analista de Sistemas"
       },
       {
         "id": 2,
         "nome": "Desenvolvimento",
         "duracao_dias": 9,
         "habilidades_necessarias": [
-          "python"
+          "Python"
         ],
-        "cargo_necessario": "desenvolvedor backend"
+        "cargo_necessario": "Dev Backend"
       },
       {
         "id": 3,
         "nome": "Auditoria",
         "duracao_dias": 5,
         "habilidades_necessarias": [
-          "auditoria"
+          "Auditoria"
         ],
-        "cargo_necessario": "qa"
+        "cargo_necessario": "QA"
       }
     ]
   },
@@ -107,27 +107,27 @@
         "nome": "Análise",
         "duracao_dias": 6,
         "habilidades_necessarias": [
-          "analise"
+          "Análise"
         ],
-        "cargo_necessario": "analista"
+        "cargo_necessario": "Analista de Sistemas"
       },
       {
         "id": 2,
         "nome": "Desenvolvimento",
         "duracao_dias": 10,
         "habilidades_necessarias": [
-          "python"
+          "Python"
         ],
-        "cargo_necessario": "desenvolvedor backend"
+        "cargo_necessario": "Dev Backend"
       },
       {
         "id": 3,
         "nome": "Auditoria",
         "duracao_dias": 4,
         "habilidades_necessarias": [
-          "auditoria"
+          "Auditoria"
         ],
-        "cargo_necessario": "qa"
+        "cargo_necessario": "QA"
       }
     ]
   },
@@ -140,27 +140,27 @@
         "nome": "Análise",
         "duracao_dias": 5,
         "habilidades_necessarias": [
-          "analise"
+          "Análise"
         ],
-        "cargo_necessario": "analista"
+        "cargo_necessario": "Analista de Sistemas"
       },
       {
         "id": 2,
         "nome": "Desenvolvimento",
         "duracao_dias": 8,
         "habilidades_necessarias": [
-          "java"
+          "Java"
         ],
-        "cargo_necessario": "desenvolvedor backend"
+        "cargo_necessario": "Dev Backend"
       },
       {
         "id": 3,
         "nome": "Auditoria",
         "duracao_dias": 5,
         "habilidades_necessarias": [
-          "auditoria"
+          "Auditoria"
         ],
-        "cargo_necessario": "qa"
+        "cargo_necessario": "QA"
       }
     ]
   },
@@ -173,27 +173,27 @@
         "nome": "Análise",
         "duracao_dias": 7,
         "habilidades_necessarias": [
-          "analise"
+          "Análise"
         ],
-        "cargo_necessario": "analista"
+        "cargo_necessario": "Analista de Sistemas"
       },
       {
         "id": 2,
         "nome": "Desenvolvimento",
         "duracao_dias": 9,
         "habilidades_necessarias": [
-          "python"
+          "Python"
         ],
-        "cargo_necessario": "desenvolvedor backend"
+        "cargo_necessario": "Dev Backend"
       },
       {
         "id": 3,
         "nome": "Auditoria",
         "duracao_dias": 6,
         "habilidades_necessarias": [
-          "auditoria"
+          "Auditoria"
         ],
-        "cargo_necessario": "qa"
+        "cargo_necessario": "QA"
       }
     ]
   }

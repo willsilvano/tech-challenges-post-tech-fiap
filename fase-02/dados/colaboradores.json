@@ -3,81 +3,90 @@
     "id": 201,
     "nome": "Bruno",
     "habilidades": [
-      "analise", "auditoria"
+      "Análise", "Auditoria"
     ],
-    "cargo": "analista",
+    "cargo": "Analista de Sistemas",
     "ausencias": ["2025-01-16", "2025-01-17"]
   },
   {
     "id": 202,
     "nome": "Carla",
     "habilidades": [
-      "python", "java"
+      "Python", "Java"
     ],
-    "cargo": "desenvolvedor frontend",
+    "cargo": "Dev Frontend",
     "ausencias": []
   },
   {
     "id": 203,
     "nome": "Daniel",
     "habilidades": [
-      "java"
+      "Java"
     ],
-    "cargo": "desenvolvedor frontend",
+    "cargo": "Dev Frontend",
     "ausencias": []
   },
   {
     "id": 204,
     "nome": "Elaine",
     "habilidades": [
-      "python"
+      "Python"
     ],
-    "cargo": "desenvolvedor backend",
+    "cargo": "Dev Backend",
     "ausencias": []
   },
   {
     "id": 205,
     "nome": "Fabrício",
     "habilidades": [
-      "java"
+      "Java"
     ],
-    "cargo": "desenvolvedor backend",
+    "cargo": "Dev Backend",
     "ausencias": []
   },
   {
     "id": 206,
     "nome": "Giulia",
     "habilidades": [
-      "auditoria"
+      "Auditoria"
     ],
-    "cargo": "qa",
+    "cargo": "QA",
     "ausencias": []
   },
   {
     "id": 207,
     "nome": "Hugo",
     "habilidades": [
-      "analise"
+      "Análise"
     ],
-    "cargo": "analista",
+    "cargo": "Analista de Sistemas",
     "ausencias": []
   },
   {
     "id": 208,
     "nome": "Iara",
     "habilidades": [
-      "python"
+      "Python"
     ],
-    "cargo": "desenvolvedor backend",
+    "cargo": "Dev Backend",
     "ausencias": []
   },
   {
     "id": 209,
     "nome": "Jonas",
     "habilidades": [
-      "auditoria"
+      "Auditoria"
     ],
-    "cargo": "qa",
+    "cargo": "QA",
     "ausencias": []
+  },
+  {
+    "id": 210,
+    "nome": "Pedro",
+    "habilidades": [
+      "Java", "Python"
+    ],
+    "cargo": "Dev Backend",
+    "ausencias": ["2025-01-01", "2025-01-15", "2025-01-30"]
   }
 ]
