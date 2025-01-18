@@ -45,7 +45,7 @@ class Utils:
         :return: Data no formato 'YYYY-MM-DD' resultante.
         """
         target_date = ref_date + datetime.timedelta(days=days)
-        return target_date.strftime("%Y-%m-%d")
+        return target_date.strftime("%d/%m/%Y")
 
 
 class DataManager:
@@ -160,6 +160,7 @@ class GeneticAlgorithm:
         fim_projeto = {t["projeto"]: 0 for t in tarefas_globais}
         intervalos_projetos = {t["projeto"]: [] for t in tarefas_globais}
 
+        # Dicionário que acumula os valores totais
         penalidades = {
             "habilidades_incorretas": 0,
             "cargo_incorreto": 0,
@@ -167,6 +168,16 @@ class GeneticAlgorithm:
             "sobreposicoes_colaborador": 0,
             "sobreposicoes_projeto": 0
         }
+
+        # Dicionário que lista cada ocorrência das penalidades
+        ocorrencias_penalidades = {
+            "habilidades_incorretas": [],
+            "cargo_incorreto": [],
+            "ausencias": [],
+            "sobreposicoes_colaborador": [],
+            "sobreposicoes_projeto": [],
+        }
+
         makespan = 0
 
         # Avaliação das tarefas
@@ -177,10 +188,24 @@ class GeneticAlgorithm:
             # Penalidade por habilidades incorretas
             if not tarefa["habilidades_necessarias"].issubset(colab["habilidades"]):
                 penalidades["habilidades_incorretas"] += 10_000
+                ocorrencias_penalidades["habilidades_incorretas"].append({
+                    "projeto": tarefa["projeto"],
+                    "tarefa": tarefa["nome"],
+                    "colaborador": colab["nome"],
+                    "habilidades_necessarias": ", ".join(tarefa["habilidades_necessarias"]),
+                    "habilidades_colaborador": ", ".join(colab["habilidades"])
+                })
 
             # Penalidade por cargo incorreto
             if tarefa["cargo_necessario"] != colab["cargo"]:
                 penalidades["cargo_incorreto"] += 10_000
+                ocorrencias_penalidades["cargo_incorreto"].append({
+                    "projeto": tarefa["projeto"],
+                    "tarefa": tarefa["nome"],
+                    "colaborador": colab["nome"],
+                    "cargo_necessario": tarefa["cargo_necessario"],
+                    "cargo_colaborador": colab["cargo"]
+                })
 
             proj_atual = tarefa["projeto"]
             ultimo_fim_proj = fim_projeto[proj_atual]
@@ -190,6 +215,7 @@ class GeneticAlgorithm:
 
             inicio_tarefa = max(ultimo_fim_proj, ultimo_fim_colab)
 
+            # Ajusta o início para não cair em ausência
             while inicio_tarefa in colab["ausencias"]:
                 inicio_tarefa += 1
 
@@ -200,9 +226,16 @@ class GeneticAlgorithm:
                     duracao_restante -= 1
                 fim_tarefa += 1
 
+            # Se caiu em ausência, registrar penalidade
             for dia in range(inicio_tarefa, fim_tarefa):
                 if dia in colab["ausencias"]:
                     penalidades["ausencias"] += 500
+                    ocorrencias_penalidades["ausencias"].append({
+                        "projeto": tarefa["projeto"],
+                        "tarefa": tarefa["nome"],
+                        "colaborador": colab["nome"],
+                        "dia_ausencia": Utils.int_to_date(dia, st.session_state.ref_date)
+                    })
                     break
 
             fim_projeto[proj_atual] = fim_tarefa
@@ -221,6 +254,11 @@ class GeneticAlgorithm:
                     s2, e2 = intervals_sorted[i2]
                     if (s1 < e2) and (s2 < e1):
                         penalidades["sobreposicoes_colaborador"] += 2000
+                        ocorrencias_penalidades["sobreposicoes_colaborador"].append({
+                            "colaborador": next(c["nome"] for c in colaboradores if c["id"] == cid),
+                            "intervalo1": (s1, e1),
+                            "intervalo2": (s2, e2)
+                        })
 
         # Penalizar sobreposições dentro do mesmo projeto
         for pid, intervals in intervalos_projetos.items():
@@ -231,11 +269,18 @@ class GeneticAlgorithm:
                     s2, e2 = intervals_sorted[i2]
                     if (s1 < e2) and (s2 < e1):
                         penalidades["sobreposicoes_projeto"] += 5000
+                        ocorrencias_penalidades["sobreposicoes_projeto"].append({
+                            "projeto": proj_atual,
+                            "intervalo1": (s1, e1),
+                            "intervalo2": (s2, e2)
+                        })
 
         penalidades["makespan"] = makespan * peso_makespan
         soma_pens = sum(penalidades.values())
-        fitness = soma_pens + penalidades["makespan"]
-        return fitness, penalidades
+        fitness = soma_pens  # soma de todas as penalidades (incluindo makespan)
+
+        # Retorna também a lista de ocorrências detalhadas
+        return fitness, penalidades, ocorrencias_penalidades
 
     @staticmethod
     def torneio(populacao: list, fitnesses: list, k: int = 3) -> int:
@@ -317,14 +362,18 @@ class GeneticAlgorithm:
 
         # Avalia a população inicial
         fits_and_penalties = [
-            self.avaliar(ind, tarefas_globais, colaboradores) for ind in pop
+            self.avaliar(ind, tarefas_globais, colaboradores)
+            for ind in pop
         ]
-        fits = [fit for fit, _ in fits_and_penalties]
-        penalties = [penalty for _, penalty in fits_and_penalties]
+        fits = [item[0] for item in fits_and_penalties]
+        penalties = [item[1] for item in fits_and_penalties]
+        penalties_occurrences = [item[2] for item in fits_and_penalties]
 
         best_sol = None
         best_fit = float("inf")
         best_penalty = {}
+        best_penalty_occurrences = {}
+
         historico_fitness = []
 
         # Loop principal de gerações
@@ -332,6 +381,7 @@ class GeneticAlgorithm:
             new_pop = []
             new_fits = []
             new_penalties = []
+            new_occurrences = []
 
             # Atualiza melhor indivíduo
             for i, f in enumerate(fits):
@@ -339,6 +389,7 @@ class GeneticAlgorithm:
                     best_fit = f
                     best_sol = pop[i][:]
                     best_penalty = penalties[i]
+                    best_penalty_occurrences = penalties_occurrences[i]
 
             historico_fitness.append(best_fit)
 
@@ -366,12 +417,14 @@ class GeneticAlgorithm:
                 self.avaliar(ind, tarefas_globais, colaboradores)
                 for ind in new_pop
             ]
-            new_fits = [fit for fit, _ in fits_and_penalties]
-            new_penalties = [penalty for _, penalty in fits_and_penalties]
+            new_fits = [item[0] for item in fits_and_penalties]
+            new_penalties = [item[1] for item in fits_and_penalties]
+            new_occurrences = [item[2] for item in fits_and_penalties]
 
             pop = new_pop
             fits = new_fits
             penalties = new_penalties
+            penalties_occurrences = new_occurrences
 
         # Avaliação final
         for i, f in enumerate(fits):
@@ -379,9 +432,11 @@ class GeneticAlgorithm:
                 best_fit = f
                 best_sol = pop[i][:]
                 best_penalty = penalties[i]
+                best_penalty_occurrences = penalties_occurrences[i]
 
         historico_fitness.append(best_fit)
-        return best_sol, best_fit, historico_fitness, best_penalty
+
+        return best_sol, best_fit, historico_fitness, best_penalty, best_penalty_occurrences
 
 
 class Visualization:
@@ -530,66 +585,6 @@ class Visualization:
         return html_code
 
     @staticmethod
-    def verificar_conflitos(df_result: pd.DataFrame) -> pd.DataFrame:
-        """
-        Verifica conflitos de alocação por colaborador e dentro do mesmo projeto,
-        identificando sobreposições de intervalos de tempo.
-
-        :param df_result: DataFrame com as tarefas, colunas de início e fim em dias, etc.
-        :return: DataFrame contendo os conflitos identificados (ou vazio, se nenhum conflito).
-        """
-        df = df_result.copy()
-        df["start_dt"] = df["Início (dias)"]
-        df["end_dt"] = df["Fim (dias)"]
-
-        conflitos = []
-
-        # Conflitos por colaborador
-        for colab, group in df.groupby("Colaborador"):
-            rows = group.sort_values("start_dt").to_dict("records")
-            for i1 in range(len(rows)):
-                for i2 in range(i1 + 1, len(rows)):
-                    r1 = rows[i1]
-                    r2 = rows[i2]
-                    s1, e1 = r1["start_dt"], r1["end_dt"]
-                    s2, e2 = r2["start_dt"], r2["end_dt"]
-                    if (s1 < e2) and (s2 < e1):
-                        conflitos.append({
-                            "Tipo": "Colaborador",
-                            "Colaborador": colab,
-                            "Projeto": f'{r1["Projeto"]} / {r2["Projeto"]}',
-                            "Tarefa 1": r1["Nome Tarefa"],
-                            "Período 1": f"{r1['start_dt']} - {r1['end_dt']}",
-                            "Tarefa 2": r2["Nome Tarefa"],
-                            "Período 2": f"{r2['start_dt']} - {r2['end_dt']}",
-                            "Motivo": "Conflito de tarefas atribuídas ao mesmo colaborador",
-                        })
-
-        # Conflitos por projeto
-        for projeto, group in df.groupby("Projeto"):
-            rows = group.sort_values("start_dt").to_dict("records")
-            for i1 in range(len(rows)):
-                for i2 in range(i1 + 1, len(rows)):
-                    r1 = rows[i1]
-                    r2 = rows[i2]
-                    s1, e1 = r1["start_dt"], r1["end_dt"]
-                    s2, e2 = r2["start_dt"], r2["end_dt"]
-                    if (s1 < e2) and (s2 < e1):
-                        conflitos.append({
-                            "Tipo": "Projeto",
-                            "Colaborador": f'{r1["Colaborador"]} / {r2["Colaborador"]}',
-                            "Projeto": projeto,
-                            "Tarefa 1": r1["Nome Tarefa"],
-                            "Período 1": f"{r1['start_dt']} - {r1['end_dt']}",
-                            "Tarefa 2": r2["Nome Tarefa"],
-                            "Período 2": f"{r2['start_dt']} - {r2['end_dt']}",
-                            "Motivo": "Conflito de etapas sobrepostas no mesmo projeto",
-                        })
-
-        df_conflitos = pd.DataFrame(conflitos)
-        return df_conflitos
-
-    @staticmethod
     def gerar_tabela_html(df: pd.DataFrame, duracao_maxima: int) -> str:
         """
         Gera código HTML contendo uma tabela que ilustra um gráfico de Gantt simplificado
@@ -731,7 +726,7 @@ class App:
             )
 
             # Executa Algoritmo Genético
-            best_ind, best_val, hist_fit, detalhes_penalidades = self.ga.algoritmo_genetico(
+            best_ind, best_val, hist_fit, detalhes_penalidades, ocorrencias_penalidades = self.ga.algoritmo_genetico(
                 tam_pop, n_gen, pc, pm, tarefas_globais, colaboradores
             )
 
@@ -797,6 +792,7 @@ class App:
             st.session_state["melhor_fit"] = best_val
             st.session_state["hist_fit"] = hist_fit
             st.session_state["detalhes_penalidades"] = detalhes_penalidades
+            st.session_state["ocorrencias_penalidades"] = ocorrencias_penalidades
 
         df_result = st.session_state["df_result"]
 
@@ -843,19 +839,32 @@ class App:
                 components.html(st.session_state["table_result"], height=600, scrolling=True)
 
             with tab_conflicts:
-                st.subheader("Conflitos de Alocação")
-                df_conf = self.vis.verificar_conflitos(df_result)
-                if df_conf.empty:
-                    st.success("Nenhum conflito encontrado! :)")
-                else:
-                    st.warning("Há conflitos de alocação!")
-                    st.table(df_conf)
+                st.subheader("Resumo das Penalidades")
 
-                st.subheader("Detalhamento das Penalidades")
+                translate_penalities = {
+                    "habilidades_incorretas": "Habilidades Incorretas",
+                    "cargo_incorreto": "Cargo Incorreto",
+                    "ausencias": "Ausências",
+                    "sobreposicoes_colaborador": "Sobreposições de Colaborador",
+                    "sobreposicoes_projeto": "Sobreposições de Projeto",
+                    "makespan": "Makespan"
+                }
+
                 if "detalhes_penalidades" in st.session_state:
                     df_penality = pd.DataFrame(st.session_state["detalhes_penalidades"].items(),
                                                columns=["Motivo", "Valor"])
+                    df_penality["Motivo"] = df_penality["Motivo"].apply(
+                        lambda x: translate_penalities[x]
+                    )
                     st.dataframe(df_penality, hide_index=True)
+
+                if "ocorrencias_penalidades" in st.session_state:
+                    for tipo_pen, ocorrencias in st.session_state["ocorrencias_penalidades"].items():
+                        if ocorrencias:
+                            st.write(f"### {translate_penalities[tipo_pen]}")
+                            df_oc = pd.DataFrame(ocorrencias)
+                            st.table(df_oc)
+
 
             with tab_fitness:
                 st.subheader("Evolução da Fitness")
