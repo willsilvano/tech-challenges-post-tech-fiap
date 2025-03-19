@@ -1,107 +1,56 @@
-# 🛒 Assistente de Produtos RAG
+## Escolha do Dataset
 
-Uma aplicação de Recuperação Aumentada por Geração (RAG) para responder consultas sobre produtos utilizando LangChain, FAISS, Ollama e Streamlit.
+Foi utilizado o [dataset disponibilizado pela FIAP](https://drive.google.com/file/d/12zH4mL2RX8iSvH0VCNnd3QxO4DzuHWnK/view), que contém títulos e descrições de produtos da Amazon. Foi utilizado o arquivo trn.json
 
-## 📌 Visão Geral
+## Preparação do Dataset
 
-Este projeto implementa um assistente virtual para consultas sobre produtos utilizando a técnica RAG (Retrieval-Augmented Generation). O sistema recupera informações relevantes de uma base de dados de produtos e gera respostas naturais em português, mesmo quando as perguntas são feitas em inglês.
+A preparação do dataset foi feita utilizando o script `scripts/0-prepare-data.py`. O script lê o arquivo `trn.json` e extrai os títulos e descrições dos produtos.
 
-**O Sistema também usa um modelo llama3.2 fine tunado para responder as perguntas.**
+Após carregado, o dataset filtra os dados, removendo as linhas onde a descrição ou título são vazios/nulos.
 
-## 🚀 Funcionalidades
+Além disso, são removidas as linhas em que o tamanho do texto da descrição é menor que 100 caracteres.
 
-- **Pesquisa Semântica**: Encontra produtos relevantes com base no significado da consulta, não apenas em palavras-chave
-- **Interface Amigável**: Interface de chat intuitiva criada com Streamlit
-- **Transparência**: Visualize quais documentos foram utilizados para gerar as respostas
-- **Personalização**: Ajuste parâmetros como temperatura do modelo e limites de similaridade
-- **Multilíngue**: Responde em português mesmo para consultas em inglês
+Após isso, é aplicado um tratamento de tags HTML, removendo todas as tags e mantendo apenas o texto.
 
-## 🛠️ Tecnologias Utilizadas
+Por fim, o dataset é salvo em um arquivo `data/trn-processed.csv`.
 
-- **LangChain**: Framework para criar aplicações baseadas em LLMs
-- **FAISS**: Biblioteca para busca de similaridade eficiente em vetores de alta dimensão
-- **Ollama**: Modelos de linguagem executados localmente
-- **Streamlit**: Interface de usuário web interativa
-- **Pandas**: Processamento de dados tabulares
+## Definição dos modelos para Fine Tuning
 
-## 📋 Pré-requisitos
+Decidimos em realizar dois processos de fine-tuning:
 
-- Python 3.8+
-- Ollama instalado e configurado com os modelos necessários
-- Arquivo CSV com dados de produtos no formato adequado
+1. Um fine tuning para que o modelo retorne a descrição do produto a partir do título. Para esse caso foi utilizado como base o modelo `Qwen 2.5 7B` disponibilizado pelo repositório unsloth no Hugging Face.
 
-## ⚙️ Instalação
+2. Um fine tuning para que o modelo gere respostas a partir de perguntas do usuário, sobre um produto específico. Para esse caso foi utilizado como base o modelo `Llama 3.2 3B` disponibilizado pelo repositório unsloth no Hugging Face.
 
-1. Instale as dependências:
-   ```bash
-   uv sync
-   ```
 
-2. Certifique-se de ter o Ollama instalado e os modelos configurados:
-   ```bash
-   # Instale o modelo
-   Através do GGUF gerado no Google Colab, baixe-o e salve dentro da pasta de modelos do LMStudio.
+## Preparação para o Fine Tuning
 
-   # Faça o deploy local dos modelos
-   Na tela de `Developer` do LMStudio, selecione os dmodelos para realizar o deploy local.
+Para realizar o fine tuning do modelo que descreve produtos, foi utilizado o dataset `data/data-1000.csv` gerado a partir do script `scripts/01-prepare-data-finetuning-1.py`. Esse script lê o arquivo `data/trn-processed.csv` e seleciona 1000 linhas aleatórias para serem utilizadas no fine tuning.
 
-   # Instale o modelo de embeddings
-   ollama pull nomic-embed-text
-   ```
+Para realizar o fine tuning do modelo que gera respostas a partir de perguntas, foi utilizado o dataset `data/dados-fine-tunning.jsonl` gerado a partir do script `scripts/02-prepare-data-finetuning-2.py`. Esse script lê o arquivo `data/data-1000.csv` e gera um arquivo jsonl com as perguntas e respostas geradas a partir dos títulos e descrições dos produtos. Para geração das perguntas e respostas, foi usado uma API desenvolvida pela equipe, que usa a API do Chat GPT. O Prompt utilizado para geração das perguntas e respostas foi:
 
-## 📊 Estrutura de Dados
-
-O arquivo CSV de entrada deve conter pelo menos as seguintes colunas:
-- `title`: Título do produto
-- `content`: Descrição ou detalhes do produto
-
-Exemplo:
-```csv
-title,content,price,category
-"Smartphone XYZ","Um smartphone avançado com câmera de 48MP e tela AMOLED.",999.99,Eletrônicos
+TODO: colocar o prompt  correto
+```
+Pergunta: Qual é a descrição do produto: {título do produto}?
+Resposta: {descrição do produto}
 ```
 
-## 🚀 Uso
+## Execução do Fine Tuning
 
-1. Inicie a aplicação:
-   ```bash
-   streamlit run app.py
-   ```
+O fine tuning do modelo que descreve produtos foi feito utilizando o script `scripts/04-fine-tuning-qwen2.5-7B.ipynb` sendo executado diretamente no Google Colab, utilizando VM com GPU de 16GB VRAM. O script carrega o modelo `Qwen 2.5 7B` e o dataset `data/data-1000.csv` e realiza o fine tuning do modelo.
 
-2. No painel lateral:
-   - Selecione os modelos e parâmetros desejados
-   - Clique em "Inicializar Assistente"
-   - Clique em "Processar Dados CSV" para carregar seus dados
+O fine tuning do modelo que gera respostas a partir de perguntas foi feito utilizando o script `scripts/05-fine-tuning-llama3.2-3B.ipynb` sendo executado diretamente no Google Colab, utilizando VM com GPU de 16GB VRAM. O script carrega o modelo `Llama 3.2 3B` e o dataset `data/dados-fine-tunning.jsonl` e realiza o fine tuning do modelo.
 
-3. Na área principal, faça perguntas sobre produtos usando o campo de chat
+Ambos os scripts exportam o modelo no formato GGUF para que possam ser executados localmente atraves de Ollama ou LMStudio.
 
-## 🔧 Configurações Avançadas
+## Resultados
 
-### Modelos Suportados
-- LLM: `llama3.2-3b-perguntas`, `llama3.2:3b`
-- Embeddings: `nomic-embed-text`
+Para verificar o resultado de ambos os modelos refinados, foi criado duas demonstrações, sendo:
 
-### Ajustes de Parâmetros
-- **Temperatura**: Afeta a criatividade das respostas (0.0 - 1.0)
-- **Limiar de Similaridade**: Filtra documentos com base na relevância (0% - 100%)
-- **Número de Documentos (k)**: Quantidade de documentos recuperados para cada consulta (1-10)
+1. O arquivo `agents.ipynb`: Esse script cria alguns agentes de IA, através da biblioteca LangGraph, no um assistente decisor recebe uma texto do usuário, e esse agente deve verificar se é uma pergunta ou título de um produto. Sendo um título, o modelo encaminha a mensagem para outro agente realizar a descrição do produto, utilizando o modelo Qwen 2.5 7B. Caso seja uma pergunta, o modelo encaminha a mensagem para outro agente realizar a resposta da pergunta, utilizando o modelo Llama 3.2 3B.
 
-## 📁 Estrutura do Projeto
+2. O arquivo `rag.py`: Esse script cria uma aplicação com Streamlit, na qual é possível inicializar uma vector store para execução de um RAG com base no arquivo `data/dados-1000.csv`. É possível ainda selecionar qual modelo irá responder, e o percentual de similaridade para considerar os dados de título e descrição dos produtos na busca. O usuário digita uma pergunta e o modelo retorna a resposta com base no contexto encontrado através do RAG.
 
-```
-assistente-produtos-rag/
-├── rag.py                # Aplicação Streamlit principal
-├── data/                 # Diretório para arquivos de dados
-│   └── data-1000.csv     # Exemplo de dados de produtos
-├── vector_store/         # Diretório para armazenar índices FAISS
-├── requirements.txt      # Dependências do projeto
-└── README.md             # Documentação
-```
+# Video demonstração
 
-## 📝 Exemplo de Consultas
-
-- "Samsung Galaxy Note II Decal Vinyl Skin é uma boa compra?"
-- "I want car decals"
-- "Recommends me products for 3D printer"
-- "Há algum item de automóveis na sua loja?"
-- "Zoya Nail Polish .5 fl oz é uma boa compra?"
+TODO: colocar o link
