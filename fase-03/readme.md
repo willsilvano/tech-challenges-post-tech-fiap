@@ -34,20 +34,17 @@ Este projeto implementa um assistente virtual para consultas sobre produtos util
 
 1. Instale as dependências:
    ```bash
-   pip install -r requirements.txt
+   uv sync
    ```
 
 2. Certifique-se de ter o Ollama instalado e os modelos configurados:
    ```bash
-   # Instale o modelo (TODO colocar a instalação do modelo com fine tuning)
-   ollama pull fiap-tc3-model
-   # ou
-   ollama pull llama3.2:3b
-   # ou
-   ollama pull llama3.1:8b
-   # ou
-   ollama pull phi4
-      
+   # Instale o modelo
+   Através do GGUF gerado no Google Colab, baixe-o e salve dentro da pasta de modelos do LMStudio.
+
+   # Faça o deploy local dos modelos
+   Na tela de `Developer` do LMStudio, selecione os dmodelos para realizar o deploy local.
+
    # Instale o modelo de embeddings
    ollama pull nomic-embed-text
    ```
@@ -81,7 +78,7 @@ title,content,price,category
 ## 🔧 Configurações Avançadas
 
 ### Modelos Suportados
-- LLM: `fiap-tc3-model`, `llama3.2:3b`, `llama3.1:8b`
+- LLM: `llama3.2-3b-perguntas`, `llama3.2:3b`
 - Embeddings: `nomic-embed-text`
 
 ### Ajustes de Parâmetros
@@ -93,7 +90,7 @@ title,content,price,category
 
 ```
 assistente-produtos-rag/
-├── app.py                # Aplicação Streamlit principal
+├── rag.py                # Aplicação Streamlit principal
 ├── data/                 # Diretório para arquivos de dados
 │   └── data-1000.csv     # Exemplo de dados de produtos
 ├── vector_store/         # Diretório para armazenar índices FAISS
