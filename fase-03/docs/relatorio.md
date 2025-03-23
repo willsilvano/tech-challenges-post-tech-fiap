@@ -29,10 +29,17 @@ Para realizar o fine tuning do modelo que descreve produtos, foi utilizado o dat
 
 Para realizar o fine tuning do modelo que gera respostas a partir de perguntas, foi utilizado o dataset `data/dados-fine-tunning.jsonl` gerado a partir do script `scripts/02-prepare-data-finetuning-2.py`. Esse script lê o arquivo `data/data-1000.csv` e gera um arquivo jsonl com as perguntas e respostas geradas a partir dos títulos e descrições dos produtos. Para geração das perguntas e respostas, foi usado uma API desenvolvida pela equipe, que usa a API do Chat GPT. O Prompt utilizado para geração das perguntas e respostas foi:
 
-TODO: colocar o prompt  correto
 ```
-Pergunta: Qual é a descrição do produto: {título do produto}?
-Resposta: {descrição do produto}
+Dado o título e descrição de um produto, crie pergunta e respostas hipotéticas que um usuário faria e um chatbot responderia.
+Toda pergunta deve fazer referência ao título do produto.
+A resposta deve seguir um tom informal que atenderá público de todas as idades e deve focar nas qualidades do produto, insistindo para que usuário compre.
+A resposta deve seguir a estritamente a descrição do produto, sem inventar ou trazer informações que não fazem parte do contexto da descrição.
+
+A resposta deve conter no máximo 80 palavras.
+
+Gere somente 1 pergunta (user) e 1 resposta (assistant).
+
+Retorne um json sem a tag ```json com os campos user e assistant
 ```
 
 ## Execução do Fine Tuning
