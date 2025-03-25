@@ -60,4 +60,4 @@ Para verificar o resultado de ambos os modelos refinados, foi criado duas demons
 
 # Video demonstração
 
-TODO: colocar o link
+https://www.youtube.com/watch?v=2ZYUr1ZpXV8&ab_channel=JosielEliseuBorges
