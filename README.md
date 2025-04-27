@@ -24,4 +24,14 @@ Os arquivos estão na pasta [fase-01](fase-01).
 
 Neste desafio foi desenvolvido um modelo preditivo de regressão para prever o valor dos custos médicos individuais cobrados por um seguro de saúde fictício.
 
- 
+## Fase 02
+
+Os arquivos estão na pasta [fase-02](fase-02).
+
+Neste desafio foi desenvolvido um sistema utilizando Algoritmos Genéticos para otimizar a alocação de colaboradores em tarefas de projetos, considerando habilidades específicas dos membros da equipe, ausências, cargos e possíveis conflitos de agenda.
+
+## Fase 03
+
+Os arquivos estão na pasta [fase-03](fase-03).
+
+Neste desafio foi realizado o fine-tuning de foundation models (Llama3.2 e Qwen2.5), utilizando o dataset "The AmazonTitles-1.3MM"
