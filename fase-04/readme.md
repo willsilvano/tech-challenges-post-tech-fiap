@@ -25,14 +25,11 @@ Você deverá criar uma aplicação a partir do vídeo que se encontra disponív
 ### Entregável
 
 1. Código Fonte: todo o código fonte da aplicação deve ser entregue em um repositório Git, incluindo um arquivo README com instruções claras de como executar o projeto.
-2. Relatório: o resumo obtido automaticamente com as principais
-atividades e emoções detectadas no vídeo. Nesse momento esperando que o relatório inclua:
+2. Relatório: o resumo obtido automaticamente com as principais atividades e emoções detectadas no vídeo. Nesse momento esperando que o relatório inclua:
     - Total de frames analisados.
     - Número de anomalias detectadas.
     - Observação: movimento anômalo não segue o padrão geral de atividades (como gestos bruscos ou comportamentos atípicos) esses são classificados como anômalos.
-3. Demonstração em Vídeo: um vídeo demonstrando a aplicação em
-funcionamento, evidenciando cada uma das funcionalidades
-implementadas.
+3. Demonstração em Vídeo: um vídeo demonstrando a aplicação em funcionamento, evidenciando cada uma das funcionalidades implementadas.
 
 ### Resultado
 
