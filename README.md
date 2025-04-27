@@ -35,3 +35,9 @@ Neste desafio foi desenvolvido um sistema utilizando Algoritmos Genéticos para 
 Os arquivos estão na pasta [fase-03](fase-03).
 
 Neste desafio foi realizado o fine-tuning de foundation models (Llama3.2 e Qwen2.5), utilizando o dataset "The AmazonTitles-1.3MM"
+
+## Fase 04
+
+Os arquivos estão na pasta [fase-04](fase-04).
+
+Neste desafio foi desenvolvido um sistema de análise de vídeo, utilizando técnicas de reconhecimento facial, análise de expressões emocionais e detecção de atividades.
