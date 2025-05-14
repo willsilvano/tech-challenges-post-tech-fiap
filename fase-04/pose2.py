@@ -6,7 +6,7 @@ from ultralytics import YOLO
 model = YOLO("yolov8x-pose.pt")
 
 # Vídeo de entrada
-video_path = "fase-04/persons.mp4"
+video_path = "fase-04/data/persons.mp4"
 cap = cv2.VideoCapture(video_path)
 
 # Propriedades do vídeo
@@ -17,7 +17,7 @@ total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
 # Saída de vídeo
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-output_video = cv2.VideoWriter(f"output-{video_path}", fourcc, fps, (width, height))
+output_video = cv2.VideoWriter(f"data/output-{video_path}", fourcc, fps, (width, height))
 
 # Cores para pessoas rastreadas
 colors = [

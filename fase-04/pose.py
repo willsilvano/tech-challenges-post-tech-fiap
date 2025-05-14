@@ -21,7 +21,7 @@ pose = mp_pose.Pose(
 )
 
 # Caminho do arquivo de vídeo
-video_path = "fase-04/walk.mp4"
+video_path = "fase-04/data/walk.mp4"
 cap = cv2.VideoCapture(video_path)
 
 if not cap.isOpened():
@@ -36,7 +36,7 @@ total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
 # Configura o VideoWriter para salvar o vídeo de saída
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # codec
-output_video = cv2.VideoWriter(f"output-{video_path}.mp4", fourcc, fps, (width, height))
+output_video = cv2.VideoWriter(f"data/output-{video_path}.mp4", fourcc, fps, (width, height))
 
 # Cria barra de progresso com tqdm
 progress_bar = tqdm(total=total_frames, desc="Processando frames", unit="frame")

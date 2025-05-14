@@ -17,7 +17,7 @@ def setup_video_io(video_path):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    output_video = cv2.VideoWriter(f"output-{video_path}", fourcc, fps, (width, height))
+    output_video = cv2.VideoWriter(f"data/output-{video_path}", fourcc, fps, (width, height))
     return cap, output_video, fps, width, height, total_frames
 
 
