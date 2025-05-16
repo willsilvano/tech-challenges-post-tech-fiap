@@ -32,4 +32,5 @@ dependencies = [
     "tensorflow>=2.17.0",
     "deepface>=0.0.93",
     "tf-keras>=2.17.0",
+    "moviepy>=2.1.2",
 ]
