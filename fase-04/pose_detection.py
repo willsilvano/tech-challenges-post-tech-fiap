@@ -6,6 +6,7 @@ from ultralytics import YOLO
 import numpy as np
 import os
 from typing import List, Tuple, Optional, Dict, Any
+from detector import fix_video_codec
 
 LANDMARK_NAMES: List[str] = [
     "nariz",
@@ -58,8 +59,8 @@ LANDMARK_NAME_TO_INDEX_MAP: Dict[str, int] = {
 # Funções utilitárias
 # =======================
 def setup_video_io(
-    video_path: str,
-) -> Tuple[cv2.VideoCapture, cv2.VideoWriter, int, int, int, int]:
+    video_path: str
+) -> Tuple[cv2.VideoCapture, cv2.VideoWriter, str, int, int, int, int]:
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise IOError(f"Não foi possível abrir o vídeo: {video_path}")
@@ -70,14 +71,10 @@ def setup_video_io(
 
     base, ext = os.path.splitext(video_path)
     output_path = f"{base}_output{ext}"
-    if (
-        output_path == video_path
-    ):  # Handle cases where extension might not be .mp4 or file is in root
-        output_path = f"{base}_output.mp4"
 
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     output_video = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-    return cap, output_video, fps, width, height, total_frames
+    return cap, output_video, output_path, fps, width, height, total_frames
 
 
 def get_color(idx: int) -> Tuple[int, int, int]:
@@ -338,12 +335,13 @@ def draw_person_annotations(
 # =======================
 def process_video(
     video_path: str,
+    output_fixed_path: str,
     model_path: str = "yolov8x-pose.pt",
     person_id_to_monitor: Optional[int] = None,
     monitor_landmarks_indices: Optional[List[int]] = None,
 ) -> None:
     model = YOLO(model_path)
-    cap, output_video, _, _, _, total_frames = setup_video_io(video_path)
+    cap, output_video, output_path, _, _, _, total_frames = setup_video_io(video_path)
 
     if monitor_landmarks_indices is None:
         monitor_landmarks_indices = list(range(len(LANDMARK_NAMES)))
@@ -416,6 +414,9 @@ def process_video(
     cap.release()
     output_video.release()
     cv2.destroyAllWindows()
+
+    fix_video_codec(output_path, output_fixed_path)
+
     print("Processamento finalizado com sucesso!")
 
 
