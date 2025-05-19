@@ -2,7 +2,7 @@ import os
 import time
 import streamlit as st
 from detector import detect_emotions
-from report import generate_report
+from report import generate_emotion_report, generate_pose_report
 from pose_detection import process_video as process_pose_video
 
 st.set_page_config(page_title="Detector de Emoções e Poses com IA")
@@ -15,7 +15,9 @@ os.makedirs(VIDEO_OUTPUT_DIR, exist_ok=True)
 video_files = [f for f in os.listdir(VIDEO_DIR) if f.endswith(".mp4")]
 
 # Opção entre módulos
-option = st.sidebar.radio("Selecione a funcionalidade:", ("Detecção de Emoções", "Detecção de Poses"))
+option = st.sidebar.radio(
+    "Selecione a funcionalidade:", ("Detecção de Emoções", "Detecção de Poses")
+)
 
 selected_video = st.selectbox("🎬 Selecione um vídeo:", video_files)
 
@@ -26,7 +28,6 @@ if selected_video:
     raw_path = os.path.join(VIDEO_DIR, f"raw_{selected_video}")
 
     if option == "Detecção de Emoções":
-
         if st.button("🔍 Processar Emoções"):
             st.info("Processando emoções... Isso pode levar alguns minutos.")
             progress_bar = st.progress(0)
@@ -34,7 +35,10 @@ if selected_video:
             fixed_path = os.path.join(VIDEO_OUTPUT_DIR, f"emotion_{selected_video}")
 
             total_frames, emotion_counts = detect_emotions(
-                input_path, raw_path, fixed_path, progress_callback=progress_bar.progress
+                input_path,
+                raw_path,
+                fixed_path,
+                progress_callback=progress_bar.progress,
             )
             time.sleep(1)
 
@@ -42,7 +46,7 @@ if selected_video:
                 st.success("✅ Processamento finalizado!")
                 st.video(fixed_path)
 
-                report_md = generate_report(total_frames, emotion_counts)
+                report_md = generate_emotion_report(total_frames, emotion_counts)
                 st.markdown("---")
                 st.markdown(report_md)
             else:
@@ -51,18 +55,21 @@ if selected_video:
     elif option == "Detecção de Poses":
         if st.button("🏃 Processar Pose"):
             st.info("Executando detecção de pose...")
+            progress_bar = st.progress(0)
 
             output_path = os.path.join(VIDEO_OUTPUT_DIR, f"pose_{selected_video}")
-            # try:
-            process_pose_video(input_path, output_path)
 
-            # fix_video_codec(output_raw_path, output_fixed_path)
-            # pose_output_path = input_path.replace(".mp4", "_output.mp4")
+            total_frames, poses_count = process_pose_video(
+                input_path, output_path, progress_callback=progress_bar.progress
+            )
+
             time.sleep(1)
             if os.path.exists(output_path):
                 st.success("✅ Processamento de pose finalizado!")
                 st.video(output_path)
+
+                report_md = generate_pose_report(total_frames, poses_count)
+                st.markdown("---")
+                st.markdown(report_md)
             else:
                 st.error("❌ Não foi possível gerar o vídeo de saída.")
-            # except Exception as e:
-            #     st.error(f"Erro ao processar pose: {e}")

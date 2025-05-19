@@ -1,12 +1,14 @@
 import argparse
 import math
 import cv2
-from tqdm import tqdm
+from collections import defaultdict
 from ultralytics import YOLO
 import numpy as np
 import os
-from typing import List, Tuple, Optional, Dict, Any
+from typing import List, Tuple, Optional, Dict
 from detector import fix_video_codec
+import asyncio
+import traceback
 
 LANDMARK_NAMES: List[str] = [
     "nariz",
@@ -277,6 +279,8 @@ def draw_action_text(
         1,
     )
 
+    return action
+
 
 def draw_person_annotations(
     annotated_image: np.ndarray,
@@ -306,7 +310,7 @@ def draw_person_annotations(
         )
 
     # Texto da ação
-    draw_action_text(annotated_image, keypoints, x1, y1, x2, y2)
+    action = draw_action_text(annotated_image, keypoints, x1, y1, x2, y2)
 
     # Keypoints
     for lm_idx, kp in enumerate(keypoints):
@@ -329,6 +333,8 @@ def draw_person_annotations(
             1,
         )
 
+    return action
+
 
 # =======================
 # Função principal de processamento
@@ -339,86 +345,109 @@ def process_video(
     model_path: str = "yolov8x-pose.pt",
     person_id_to_monitor: Optional[int] = None,
     monitor_landmarks_indices: Optional[List[int]] = None,
+    progress_callback: Optional[callable] = None,
 ) -> None:
-    print(model_path)
-    model = YOLO(model_path)
-    cap, output_video, output_path, _, _, _, total_frames = setup_video_io(video_path)
+    try:
+        # Set event loop policy for Windows if needed
+        if os.name == "nt":
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-    if monitor_landmarks_indices is None:
-        monitor_landmarks_indices = list(range(len(LANDMARK_NAMES)))
+        model = YOLO(model_path)
+        cap, output_video, output_path, _, _, _, total_frames = setup_video_io(
+            video_path
+        )
 
-    with tqdm(total=total_frames, desc="Processando", unit="frame") as progress_bar:
+        poses_counts = defaultdict(int)
+
+        if monitor_landmarks_indices is None:
+            monitor_landmarks_indices = list(range(len(LANDMARK_NAMES)))
+
+        frame_count = 0
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
 
-            progress_bar.update(1)
-            annotated_image = frame.copy()
+            frame_count += 1
+            if progress_callback:
+                progress_callback(min(frame_count / total_frames, 1.0))
 
-            results = model.track(
-                source=frame,
-                persist=True,
-                classes=0,
-                verbose=False,
-                tracker="bytetrack.yaml",
-            )
-
-            if (
-                results
-                and results[0].boxes is not None
-                and results[0].keypoints is not None
-            ):
-                r = results[0]
-                boxes_data = r.boxes.xyxy.cpu().numpy()  # Ensure it's numpy
-                keypoints_data = r.keypoints.xy.cpu().numpy()  # Ensure it's numpy
-                track_ids_tensor = r.boxes.id
-
-                num_detections = len(boxes_data)
-                track_ids = (
-                    track_ids_tensor.cpu().numpy().astype(int)
-                    if track_ids_tensor is not None
-                    else [None] * num_detections
+            try:
+                annotated_image = frame.copy()
+                results = model.track(
+                    source=frame,
+                    persist=True,
+                    classes=0,
+                    verbose=False,
+                    tracker="bytetrack.yaml",
                 )
+                # Process results
+                if (
+                    results
+                    and results[0].boxes is not None
+                    and results[0].keypoints is not None
+                ):
+                    r = results[0]
+                    boxes_data = r.boxes.xyxy.cpu().numpy()
+                    keypoints_data = r.keypoints.xy.cpu().numpy()
+                    track_ids_tensor = r.boxes.id
 
-                for i in range(num_detections):
-                    box = boxes_data[i]
-                    keypoints = keypoints_data[i]
-                    current_track_id = (
-                        track_ids[i] if track_ids_tensor is not None else None
+                    num_detections = len(boxes_data)
+                    track_ids = (
+                        track_ids_tensor.cpu().numpy().astype(int)
+                        if track_ids_tensor is not None
+                        else [None] * num_detections
                     )
 
-                    if (
-                        person_id_to_monitor is not None
-                        and current_track_id != person_id_to_monitor
-                    ):
-                        continue
+                    for i in range(num_detections):
+                        box = boxes_data[i]
+                        keypoints = keypoints_data[i]
+                        current_track_id = (
+                            track_ids[i] if track_ids_tensor is not None else None
+                        )
 
-                    # Use track_id for color if available, otherwise use detection index
-                    color_idx = current_track_id if current_track_id is not None else i
-                    color = get_color(color_idx)
+                        if (
+                            person_id_to_monitor is not None
+                            and current_track_id != person_id_to_monitor
+                        ):
+                            continue
 
-                    draw_person_annotations(
-                        annotated_image,
-                        box,
-                        keypoints,
-                        current_track_id,
-                        color,
-                        monitor_landmarks_indices,
-                    )
+                        color_idx = (
+                            current_track_id if current_track_id is not None else i
+                        )
+                        color = get_color(color_idx)
 
-            output_video.write(annotated_image)
-            # cv2.imshow("Tracking com Pose", annotated_image)
-            # if cv2.waitKey(1) & 0xFF == 27:  # ESC para sair
-            #     break
+                        action = draw_person_annotations(
+                            annotated_image,
+                            box,
+                            keypoints,
+                            current_track_id,
+                            color,
+                            monitor_landmarks_indices,
+                        )
 
-    cap.release()
-    output_video.release()
-    cv2.destroyAllWindows()
+                        poses_counts[action] += 1
 
-    fix_video_codec(output_path, output_fixed_path)
+                output_video.write(annotated_image)
 
-    print("Processamento finalizado com sucesso!")
+            except RuntimeError as e:
+                print(f"Error processing frame {frame_count}: {str(e)}")
+                traceback.print_exc()
+                continue
+
+        cap.release()
+        output_video.release()
+        cv2.destroyAllWindows()
+
+        fix_video_codec(output_path, output_fixed_path)
+        print("Processamento finalizado com sucesso!")
+
+    except Exception as e:
+        print(f"Error during video processing: {str(e)}")
+        traceback.print_exc()
+        raise
+
+    return total_frames, dict(poses_counts)
 
 
 # =======================
