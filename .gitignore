@@ -1,4 +1,5 @@
 .venv
 .env
 .idea
-*.pt
+yolov8x-pose.pt
+__pycache__

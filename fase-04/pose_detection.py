@@ -59,7 +59,7 @@ LANDMARK_NAME_TO_INDEX_MAP: Dict[str, int] = {
 # Funções utilitárias
 # =======================
 def setup_video_io(
-    video_path: str
+    video_path: str,
 ) -> Tuple[cv2.VideoCapture, cv2.VideoWriter, str, int, int, int, int]:
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -340,6 +340,7 @@ def process_video(
     person_id_to_monitor: Optional[int] = None,
     monitor_landmarks_indices: Optional[List[int]] = None,
 ) -> None:
+    print(model_path)
     model = YOLO(model_path)
     cap, output_video, output_path, _, _, _, total_frames = setup_video_io(video_path)
 
@@ -407,9 +408,9 @@ def process_video(
                     )
 
             output_video.write(annotated_image)
-            cv2.imshow("Tracking com Pose", annotated_image)
-            if cv2.waitKey(1) & 0xFF == 27:  # ESC para sair
-                break
+            # cv2.imshow("Tracking com Pose", annotated_image)
+            # if cv2.waitKey(1) & 0xFF == 27:  # ESC para sair
+            #     break
 
     cap.release()
     output_video.release()
@@ -465,6 +466,4 @@ if __name__ == "__main__":
     else:  # Default to all landmarks if none are specified
         selected_landmark_indices = list(range(len(LANDMARK_NAMES)))
 
-    process_video(
-        args.video_path, args.model_path, args.person_id, selected_landmark_indices
-    )
+    process_video(args.video_path, "yolov8x-pose.pt")
