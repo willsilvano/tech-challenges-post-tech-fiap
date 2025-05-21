@@ -298,7 +298,7 @@ def draw_person_annotations(
     if track_id is not None:
         id_text_y = (
             y1 - 10 if y1 - 10 > 10 else y1 + 20
-        )  # Adjusted y1+10 to y1+20 for better visibility
+        )  
         cv2.putText(
             annotated_image,
             f"ID {track_id}",
@@ -348,7 +348,7 @@ def process_video(
     progress_callback: Optional[callable] = None,
 ) -> None:
     try:
-        # Set event loop policy for Windows if needed
+  
         if os.name == "nt":
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
@@ -475,7 +475,6 @@ if __name__ == "__main__":
         default=None,
         help="ID da pessoa para monitorar especificamente. Se não fornecido, monitora todas.",
     )
-    # Adicionar argumento para landmarks específicos (opcional, mas bom para flexibilidade)
     parser.add_argument(
         "--monitor_landmarks_names",
         nargs="+",

@@ -31,6 +31,51 @@ Você deverá criar uma aplicação a partir do vídeo que se encontra disponív
     - Observação: movimento anômalo não segue o padrão geral de atividades (como gestos bruscos ou comportamentos atípicos) esses são classificados como anômalos.
 3. Demonstração em Vídeo: um vídeo demonstrando a aplicação em funcionamento, evidenciando cada uma das funcionalidades implementadas.
 
+### Como rodar o projeto
+
+A seguir estão as instruções para configurar e executar o projeto em sua máquina local.
+
+### Pré-requisitos
+
+- Python 3.12 ou superior
+- UV
+
+### Configuração
+
+1. Clone o repositório:
+
+   ```bash
+   git clone https://github.com/willsilvano/tech-challenges-post-tech-fiap.git
+   cd tech-challenges-post-tech-fiap.git
+   ```
+
+2. Instale o UV, que é um gerenciador de dependências para Python. Para instalar, consulte a documentação oficial [aqui](https://docs.astral.sh/uv/).
+
+3. Instale as dependências do projeto:
+
+   ```bash
+   uv sync
+   ```
+
+4. Ative o ambiente virtual:
+
+   ```bash
+   source .venv/bin/activate
+   ```
+
+### Execução da aplicação
+
+Para executar a aplicação Streamlit e visualizar a aplicação desenvolvida em ação, utilize o seguinte comando:
+
+```bash
+cd fase-04
+streamlit run app.py
+```
+
+Uma vez que o servidor estiver em execução, abra seu navegador e navegue até a URL fornecida (geralmente `http://localhost:8501`).
+
+Você verá a interface do Streamlit com o aplicativo em execução.
+
 ### Resultado
 
-O documento final do projeto está em [Relatório.md](docs/relatorio.md).
+O resultado deste tech challenge é apresentado no [vídeo de entrega](https://www.youtube.com/watch?v=KtJbryvKuUM&ab_channel=JosielEliseuBorges).
